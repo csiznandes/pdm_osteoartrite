@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:pdm_osteoartrite/home_page.dart';
 import 'package:pdm_osteoartrite/main.dart';
 
 void main() {
