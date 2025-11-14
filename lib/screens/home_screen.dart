@@ -1,85 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
-import '../providers/auth_provider.dart';
-import 'profile_screen.dart';
-import 'pain_screen.dart';
-import 'techniques_screen.dart';
-import 'education_screen.dart';
-import 'agenda_screen.dart';
-import 'reports_screen.dart';
 
-//Classe para o layout da home (tela principal)
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        leading: Builder(builder: (context) => IconButton(icon: const Icon(Icons.menu), onPressed: ()=> Scaffold.of(context).openDrawer())),
-        title: const Text('Home'),
+        title: Text('Home - CuidaDor'),
         actions: [
-          IconButton(onPressed: () {
-            showDialog(context: context, builder: (_) => AlertDialog(
-              title: const Text('Alertas de segurança'),
-              content: Column(mainAxisSize: MainAxisSize.min, children: const [
-                Text('● Pare se sentir tontura intensa'),
-                Text('● Não force se tiver dor'),
-                Text('● Consulte seu médico se tiver dúvidas'),
-              ]),
-              actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text('Fechar'))],
-            ));
-          }, icon: const Icon(Icons.warning))
+          IconButton(
+            icon: Icon(Icons.warning, color: Colors.amber),
+            onPressed: () => _showAlertsDialog(context),
+          ),
         ],
       ),
-      drawer: const AppDrawer(),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            Text('Olá, ${auth.user?.name ?? 'usuário'}', style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: [
-                _MenuButton(label: 'Perfil', icon: Icons.person, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()))),
-                _MenuButton(label: 'Avaliação da dor', icon: Icons.thermostat, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const PainScreen()))),
-                _MenuButton(label: 'Técnicas de alívio', icon: Icons.self_improvement, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const TechniquesScreen()))),
-                _MenuButton(label: 'Educação', icon: Icons.menu_book, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const EducationScreen()))),
-                _MenuButton(label: 'Agenda e lembretes', icon: Icons.event, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const AgendaScreen()))),
-                _MenuButton(label: 'Relatórios e feedbacks', icon: Icons.bar_chart, onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))),
-              ],
-            )
-          ]),
+      drawer: AppDrawer(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'Bem-vindo(a)! Escolha uma opção:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 24),
+            _buildHomeButton(context, 'Perfil', '/profile', Icons.person),
+            _buildHomeButton(context, 'Avaliação da Dor', '/pain', Icons.healing),
+            _buildHomeButton(context, 'Técnicas de Alívio', '/techniques', Icons.self_improvement),
+            _buildHomeButton(context, 'Educação', '/education', Icons.menu_book),
+            _buildHomeButton(context, 'Agenda e Lembretes', '/agenda', Icons.calendar_today),
+            _buildHomeButton(context, 'Relatórios e Feedbacks', '/reports', Icons.insert_chart),
+            SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: const Color.fromARGB(255, 255, 0, 0)),
+                padding: EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text('Sair', style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-class _MenuButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  const _MenuButton({required this.label, required this.icon, required this.onTap, super.key});
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.white10),
-      onPressed: onTap,
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 36),
-        const SizedBox(height: 8),
-        Text(label, textAlign: TextAlign.center),
-      ]),
+  Widget _buildHomeButton(BuildContext context, String text, String route, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: ElevatedButton.icon(
+        icon: Icon(icon, color: Colors.black),
+        label: Text(text, style: TextStyle(color: Colors.black, fontSize: 16)),
+        onPressed: () => Navigator.pushNamed(context, route),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        ),
+      ),
+    );
+  }
+  
+  void _showAlertsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black,
+        title: Text('⚠️ Alertas de Segurança', style: TextStyle(color: Colors.amber)),
+        content: Text('Alertas: Pare se sentir tontura intensa. Não force se tiver dor. Consulte seu médico se tiver dúvidas.', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
     );
   }
 }

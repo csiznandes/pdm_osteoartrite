@@ -1,223 +1,193 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/user.dart';
-import '../providers/auth_provider.dart';
-import 'home_screen.dart';
+import '../services/api_service.dart';
 
-//Classe para o layout de registro de usuários
 class RegisterScreen extends StatefulWidget {
-  final bool editing;
-  const RegisterScreen({super.key, this.editing = false});
-
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  _RegisterScreenState createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _email = TextEditingController();
-  final _pass = TextEditingController();
-  final _age = TextEditingController();
-  final _sex = TextEditingController();
-  final _contact = TextEditingController();
-  final _diagnosis = TextEditingController();
-  final _comorb = TextEditingController();
-  String accessibility = 'Padrão';
-  bool lgpd = false;
-  bool _loading = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    if (widget.editing && auth.user != null) {
-      final u = auth.user!;
-      _name.text = u.name;
-      _email.text = u.email;
-      _pass.text = u.password;
-      _age.text = u.age?.toString() ?? '';
-      _sex.text = u.sex ?? '';
-      _contact.text = u.contact ?? '';
-      _diagnosis.text = u.diagnosis ?? '';
-      _comorb.text = u.comorbidities ?? '';
-      accessibility = u.accessibility ?? 'Padrão';
-      lgpd = u.lgpd;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _contactController = TextEditingController();
+  final _diagnosisController = TextEditingController();
+  final _comorbiditiesController = TextEditingController();
+  String? _sex;
+  bool _lgpdConsent = false;
+  bool _fontPref = false;
+  bool _contrastPref = false;
+  bool _voiceReadPref = false;
+  bool _isLoading = false;
+
+  void _submit() async {
+    if (!_lgpdConsent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('É necessário dar o consentimento para a LGPD.')),
+      );
+      return;
+    }
+    
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+
+      final payload = {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+        'name': _nameController.text,
+        'age': int.tryParse(_ageController.text),
+        'sex': _sex,
+        'contact': _contactController.text,
+        'diagnosis': _diagnosisController.text,
+        'comorbidities': _comorbiditiesController.text,
+        'accessibility': {
+          'font': _fontPref,
+          'contrast': _contrastPref,
+          'voice_read': _voiceReadPref,
+        },
+        'lgpd_consent': _lgpdConsent,
+      };
+
+      try {
+        final res = await _apiService.register(payload);
+        if (res['message'] == 'Registro efetuado') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Cadastro realizado com sucesso!')),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro no cadastro: ${res['error']}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro de conexão: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.editing ? 'Editar Perfil' : 'Cadastro Pessoal'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
+      appBar: AppBar(title: Text('Cadastro Pessoal')),
+      body: Form(
+        key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // === CAMPOS BÁSICOS ===
-                TextFormField(
-                  controller: _name,
-                  decoration: const InputDecoration(labelText: 'Nome completo'),
-                  validator: (v) =>
-                  v == null || v.isEmpty ? 'Informe o nome completo' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _email,
-                  decoration: const InputDecoration(labelText: 'E-mail'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) =>
-                  v == null || v.isEmpty ? 'Informe um e-mail' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _pass,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Senha'),
-                  validator: (v) =>
-                  v == null || v.isEmpty ? 'Informe uma senha' : null,
-                ),
-                const SizedBox(height: 8),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email (Obrigatório)'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+              ),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: 'Senha (Obrigatório)'),
+                obscureText: true,
+                validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+              ),
+              Divider(color: Colors.white24, height: 32),
 
-                // === OUTRAS INFORMAÇÕES ===
-                TextFormField(
-                  controller: _age,
-                  decoration: const InputDecoration(labelText: 'Idade'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _sex,
-                  decoration: const InputDecoration(labelText: 'Sexo'),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _contact,
-                  decoration: const InputDecoration(labelText: 'Contato'),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _diagnosis,
-                  decoration:
-                  const InputDecoration(labelText: 'Registro de diagnóstico'),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _comorb,
-                  decoration: const InputDecoration(
-                      labelText: 'Comorbidades (separe por vírgula)'),
-                ),
-                const SizedBox(height: 12),
+              Text('Dados Pessoais', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              TextFormField(controller: _nameController, decoration: InputDecoration(labelText: 'Nome')),
+              TextFormField(
+                controller: _ageController,
+                decoration: InputDecoration(labelText: 'Idade'),
+                keyboardType: TextInputType.number,
+              ),
+              DropdownButtonFormField<String>(
+                value: _sex,
+                decoration: InputDecoration(labelText: 'Sexo'),
+                items: ['Masculino', 'Feminino', 'Outro'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (v) => setState(() => _sex = v),
+              ),
+              TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone')),
+              Divider(color: Colors.white24, height: 32),
 
-                // === PREFERÊNCIAS DE ACESSIBILIDADE ===
-                DropdownButtonFormField<String>(
-                  value: accessibility,
-                  items: ['Padrão', 'Fonte maior', 'Alto contraste', 'Leitura por voz']
-                      .map((e) =>
-                      DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setState(() => accessibility = v ?? 'Padrão'),
-                  decoration: const InputDecoration(
-                      labelText: 'Preferências de acessibilidade'),
-                ),
-                const SizedBox(height: 12),
+              Text('Dados Clínicos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              TextFormField(controller: _diagnosisController, decoration: InputDecoration(labelText: 'Diagnóstico (Ex: Osteoartrite)')),
+              TextFormField(controller: _comorbiditiesController, decoration: InputDecoration(labelText: 'Comorbidades')),
+              Divider(color: Colors.white24, height: 32),
 
-                // === LGPD ===
-                Row(
-                  children: [
-                    const Text('LGPD (consentimento de dados)'),
-                    const Spacer(),
-                    Switch(
-                      value: lgpd,
-                      onChanged: (v) => setState(() => lgpd = v),
+              Text('Preferências de Acessibilidade', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              CheckboxListTile(
+                title: Text('Fonte (Tamanho/Estilo)'),
+                value: _fontPref,
+                onChanged: (v) => setState(() => _fontPref = v!),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: Colors.white,
+                checkColor: Colors.black,
+              ),
+              CheckboxListTile(
+                title: Text('Contraste Elevado'),
+                value: _contrastPref,
+                onChanged: (v) => setState(() => _contrastPref = v!),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: Colors.white,
+                checkColor: Colors.black,
+              ),
+              CheckboxListTile(
+                title: Text('Leitura por Voz'),
+                value: _voiceReadPref,
+                onChanged: (v) => setState(() => _voiceReadPref = v!),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: Colors.white,
+                checkColor: Colors.black,
+              ),
+              Divider(color: Colors.white24, height: 32),
+
+              Text('Consentimento LGPD', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              CheckboxListTile(
+                title: Text('Concordo com a coleta e uso de dados conforme a LGPD.'),
+                value: _lgpdConsent,
+                onChanged: (v) => setState(() => _lgpdConsent = v!),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: Colors.white,
+                checkColor: Colors.black,
+              ),
+              SizedBox(height: 32),
+
+              _isLoading
+                  ? Center(child: CircularProgressIndicator(color: Colors.white))
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.white),
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text('Voltar', style: TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text('Cadastrar'),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // === BOTÕES ===
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                          if (!_formKey.currentState!.validate()) return;
-                          setState(() => _loading = true);
-
-                          final user = User(
-                            name: _name.text,
-                            email: _email.text,
-                            password: _pass.text,
-                            age: int.tryParse(_age.text),
-                            sex: _sex.text,
-                            contact: _contact.text,
-                            diagnosis: _diagnosis.text,
-                            comorbidities: _comorb.text,
-                            accessibility: accessibility,
-                            lgpd: lgpd,
-                          );
-
-                          bool ok;
-                          if (widget.editing && auth.user != null) {
-                            user.id = auth.user!.id;
-                            await auth.updateProfile(user);
-                            ok = true;
-                          } else {
-                            ok = await auth.register(user);
-                          }
-
-                          setState(() => _loading = false);
-
-                          if (ok) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(widget.editing
-                                    ? 'Perfil atualizado!'
-                                    : 'Cadastro realizado com sucesso!'),
-                              ),
-                            );
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HomeScreen()),
-                                  (_) => false,
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Erro ao cadastrar. E-mail já em uso.')),
-                            );
-                          }
-                        },
-                        child: _loading
-                            ? const CircularProgressIndicator()
-                            : Text(widget.editing ? 'Salvar' : 'Cadastrar'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Voltar'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              SizedBox(height: 24),
+            ],
           ),
         ),
       ),

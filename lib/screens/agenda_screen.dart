@@ -1,86 +1,231 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import '../utils/user_session.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/data_provider.dart';
-import '../models/reminder.dart';
 
-//Classe para o layout de agenda
 class AgendaScreen extends StatefulWidget {
-  const AgendaScreen({super.key});
   @override
-  State<AgendaScreen> createState() => _AgendaScreenState();
+  _AgendaScreenState createState() => _AgendaScreenState();
 }
+
 class _AgendaScreenState extends State<AgendaScreen> {
+  final ApiService _apiService = ApiService();
+  late Future<List<dynamic>> _agendaFuture;
+  final _descriptionController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  final _desc = TextEditingController();
+  bool _isAdding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgenda();
+  }
+
+  Future<void> _loadAgenda() async {
+    if (UserSession.userId != null) {
+      setState(() {
+        _agendaFuture = _apiService.getAgenda(UserSession.userId!);
+      });
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: Colors.white,
+            onPrimary: Colors.black,
+            surface: Colors.grey[900]!,
+            onSurface: Colors.white,
+          ),
+          dialogBackgroundColor: Colors.black,
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+      builder: (context, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: Colors.white,
+            onPrimary: Colors.black,
+            surface: Colors.grey[900]!,
+            onSurface: Colors.white,
+          ),
+          dialogBackgroundColor: Colors.black,
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
+  }
+
+  void _addAgendaItem() async {
+    if (_selectedDate == null || _selectedTime == null || _descriptionController.text.isEmpty || UserSession.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Preencha data, hora e descrição.')),
+      );
+      return;
+    }
+
+    setState(() => _isAdding = true);
+
+    try {
+      final dateIso = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      final timeIso = _selectedTime!.format(context);
+      final payload = {
+        'date': dateIso,
+        'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00',
+        'description': _descriptionController.text,
+      };
+
+      await _apiService.addAgenda(UserSession.userId!, payload);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lembrete adicionado!')),
+      );
+      _descriptionController.clear();
+      setState(() {
+        _selectedDate = null;
+        _selectedTime = null;
+      });
+      _loadAgenda();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao adicionar lembrete: $e')),
+      );
+    } finally {
+      setState(() => _isAdding = false);
+    }
+  }
+
+  void _deleteAgendaItem(int itemId) async {
+    if (UserSession.userId == null) return;
+    try {
+      await _apiService.deleteAgenda(UserSession.userId!, itemId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lembrete excluído.')),
+      );
+      _loadAgenda();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    final data = Provider.of<DataProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Agenda e lembretes')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(children: [
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () async {
-                final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2100));
-                setState(()=> _selectedDate = d);
-              }, child: Text(_selectedDate==null ? 'Selecionar data' : DateFormat('dd/MM/yyyy').format(_selectedDate!)))),
-              const SizedBox(width: 8),
-              Expanded(child: OutlinedButton(onPressed: () async {
-                final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-                setState(()=> _selectedTime = t);
-              }, child: Text(_selectedTime==null ? 'Selecionar horário' : _selectedTime!.format(context)))),
-            ]),
-            const SizedBox(height: 8),
-            TextField(controller: _desc, decoration: const InputDecoration(labelText: 'Descrição')),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: () async {
-              if (_selectedDate == null || auth.user == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecione data e usuário.')));
-                return;
-              }
-              final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-              final timeStr = _selectedTime?.format(context) ?? '';
-              final reminder = Reminder(userId: auth.user!.id, date: dateStr, time: timeStr, description: _desc.text);
-              await Provider.of<DataProvider>(context, listen: false).addReminder(reminder);
-              _desc.clear();
-              setState(() {
-                _selectedDate = null;
-                _selectedTime = null;
-              });
-            },
-              child: const Text('Agendar'),
-            ),
-            const SizedBox(height: 12),
-            const Text('Agendamentos:'),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  if (auth.user != null) await Provider.of<DataProvider>(context, listen: false).loadAll(auth.user!.id!);
-                },
-                child: ListView.builder(
-                    itemCount: data.reminders.length,
-                    itemBuilder: (_, i) {
-                      final r = data.reminders[i];
-                      return ListTile(
-                        title: Text(r.description),
-                        subtitle: Text('${r.date} ${r.time}'),
-                        trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () async {
-                          await Provider.of<DataProvider>(context, listen: false).deleteReminder(r.id!, auth.user!.id!);
-                        }),
-                      );
-                    }
-                ),
+      appBar: AppBar(title: Text('Agenda e Lembretes')),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Novo Lembrete', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    icon: Icon(Icons.calendar_today, color: Colors.white),
+                    label: Text(
+                      _selectedDate == null ? 'Selecionar Data' : DateFormat('dd/MM/yyyy').format(_selectedDate!),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () => _selectDate(context),
+                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.white)),
+                  ),
+                  SizedBox(height: 8),
+
+                  OutlinedButton.icon(
+                    icon: Icon(Icons.access_time, color: Colors.white),
+                    label: Text(
+                      _selectedTime == null ? 'Selecionar Hora' : _selectedTime!.format(context),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () => _selectTime(context),
+                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.white)),
+                  ),
+                  SizedBox(height: 16),
+
+                  TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Descrição (Ex: Alongamento de Mãos)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
+                  _isAdding
+                      ? Center(child: CircularProgressIndicator(color: Colors.white))
+                      : ElevatedButton(
+                          onPressed: _addAgendaItem,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: Text('Adicionar à Agenda'),
+                        ),
+                  Divider(color: Colors.white24, height: 32),
+                  Text('Meus Lembretes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
               ),
-            )
-          ]),
-        ),
+            ),
+          ),
+
+          FutureBuilder<List<dynamic>>(
+            future: _agendaFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Colors.white)));
+              } else if (snapshot.hasError) {
+                return SliverFillRemaining(child: Center(child: Text('Erro ao carregar lembretes: ${snapshot.error}')));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return SliverToBoxAdapter(child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text('Nenhum lembrete agendado.', style: TextStyle(color: Colors.white70)),
+                ));
+              }
+
+              final items = snapshot.data!;
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final item = items[index];
+                    return ListTile(
+                      title: Text(item['description'], style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                        'Data: ${item['date']} | Hora: ${item['time']?.substring(0, 5)}',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteAgendaItem(item['id']),
+                      ),
+                      leading: Icon(Icons.notifications_active, color: Colors.amber),
+                    );
+                  },
+                  childCount: items.length,
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

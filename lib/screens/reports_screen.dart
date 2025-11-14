@@ -1,92 +1,183 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../providers/auth_provider.dart';
-import '../providers/data_provider.dart';
-import '../models/feedback_model.dart';
+import '../services/api_service.dart';
+import '../utils/user_session.dart';
 
-//Classe para o layout de relatórios e feedbacks
 class ReportsScreen extends StatefulWidget {
-  const ReportsScreen({super.key});
   @override
-  State<ReportsScreen> createState() => _ReportsScreenState();
+  _ReportsScreenState createState() => _ReportsScreenState();
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  final _fbCtrl = TextEditingController();
+  final ApiService _apiService = ApiService();
+  final _feedbackController = TextEditingController();
+  late Future<List<dynamic>> _painFuture;
+  late Future<List<dynamic>> _feedbackFuture;
+  bool _isSendingFeedback = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    if (auth.user != null) {
-      Provider.of<DataProvider>(context, listen: false).loadAll(auth.user!.id!);
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
+    if (UserSession.userId != null) {
+      setState(() {
+        _painFuture = _apiService.getPain(UserSession.userId!);
+        _feedbackFuture = _apiService.getFeedback(UserSession.userId!);
+      });
+    }
+  }
+
+  void _addFeedback() async {
+    if (_feedbackController.text.isEmpty || UserSession.userId == null) return;
+
+    setState(() => _isSendingFeedback = true);
+
+    try {
+      await _apiService.addFeedback(UserSession.userId!, _feedbackController.text);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Feedback enviado!')),
+      );
+      _feedbackController.clear();
+      _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao enviar feedback: $e')),
+      );
+    } finally {
+      setState(() => _isSendingFeedback = false);
+    }
+  }
+
+  void _deleteFeedback(int fbId) async {
+    if (UserSession.userId == null) return;
+    try {
+      await _apiService.deleteFeedback(UserSession.userId!, fbId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Feedback excluído.')),
+      );
+      _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir feedback: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    final data = Provider.of<DataProvider>(context);
-    // Build monthly averages (simple)
-    final map = <String, List<int>>{};
-    for (var p in data.pains) {
-      final d = DateTime.parse(p.date);
-      final key = DateFormat('yyyy-MM').format(d);
-      map.putIfAbsent(key, ()=>[]).add(p.intensity);
-    }
-    final months = map.keys.toList()..sort();
-    final spots = <FlSpot>[];
-    for (var i=0;i<months.length;i++){
-      final avg = map[months[i]]!.fold<int>(0, (s,e)=>s+e) / map[months[i]]!.length;
-      spots.add(FlSpot(i.toDouble(), avg));
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Relatórios e feedbacks')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(children: [
-            const Text('Gráfico de evolução da dor (média por mês)'),
-            const SizedBox(height: 12),
-            if (spots.isEmpty)
-              const Text('Sem dados de dor para exibir')
-            else
-              SizedBox(height: 200, child: LineChart(LineChartData(
-                minY: 0,
-                maxY: 10,
-                lineBarsData: [LineChartBarData(spots: spots, isCurved: true, barWidth: 3)],
-                titlesData: FlTitlesData(
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, meta){
-                    final idx = v.toInt();
-                    if (idx>=0 && idx<months.length) return Text(months[idx].substring(5));
-                    return const Text('');
-                  })),
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                ),
-              ))),
-            const SizedBox(height: 12),
-            const Text('Feedbacks'),
-            TextField(controller: _fbCtrl, decoration: const InputDecoration(labelText: 'Escreva um feedback')),
-            Row(children: [
-              ElevatedButton(onPressed: () async {
-                if (auth.user==null || _fbCtrl.text.isEmpty) return;
-                final f = FeedbackModel(userId: auth.user!.id, date: DateTime.now().toIso8601String(), text: _fbCtrl.text);
-                await Provider.of<DataProvider>(context, listen: false).addFeedback(f);
-                _fbCtrl.clear();
-              }, child: const Text('Salvar')),
-              const SizedBox(width: 12),
-              OutlinedButton(onPressed: ()=> Navigator.pop(context), child: const Text('Voltar')),
-            ]),
-            Expanded(child: ListView.builder(itemCount: data.feedbacks.length, itemBuilder: (_,i){
-              final f = data.feedbacks[i];
-              return ListTile(title: Text(f.text), subtitle: Text(DateFormat('dd/MM/yyyy').format(DateTime.parse(f.date))), trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () async {
-                await Provider.of<DataProvider>(context, listen: false).deleteFeedback(f.id!, auth.user!.id!);
-              }));
-            }))
-          ]),
+      appBar: AppBar(title: Text('Relatórios e Feedbacks')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text('Gráfico de Evolução da Dor (Mensal)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            FutureBuilder<List<dynamic>>(
+              future: _painFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator(color: Colors.white));
+                } else if (snapshot.hasError) {
+                  return Text('Erro ao carregar dados de dor: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text('Nenhum registro de dor para exibir.', style: TextStyle(color: Colors.white70));
+                }
+
+                final data = snapshot.data!;
+                final latestEntries = data.length > 5 ? data.sublist(data.length - 5) : data; 
+                
+                return Container(
+                  height: 200,
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Gráfico Simulado\nÚltimas 5 notas de dor (Score/Data):\n${latestEntries.map((e) => '${e['score']} em ${e['created_at'].substring(5, 10)}').join(', ')}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                );
+              },
+            ),
+            
+            Divider(color: Colors.white24, height: 32),
+
+            Text('Envie seu Feedback', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            TextField(
+              controller: _feedbackController,
+              decoration: InputDecoration(
+                labelText: 'Seu comentário ou sugestão',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            SizedBox(height: 16),
+            _isSendingFeedback
+                ? Center(child: CircularProgressIndicator(color: Colors.white))
+                : ElevatedButton(
+                    onPressed: _addFeedback,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text('Enviar Feedback'),
+                  ),
+            
+            Divider(color: Colors.white24, height: 32),
+
+            Text('Feedbacks Registrados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            FutureBuilder<List<dynamic>>(
+              future: _feedbackFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator(color: Colors.white));
+                } else if (snapshot.hasError) {
+                  return Text('Erro ao carregar feedbacks: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text('Nenhum feedback registrado.', style: TextStyle(color: Colors.white70));
+                }
+
+                final feedbacks = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: feedbacks.length,
+                  itemBuilder: (context, index) {
+                    final fb = feedbacks[index];
+                    return Card(
+                      color: Colors.grey[900],
+                      child: ListTile(
+                        title: Text(fb['text']),
+                        subtitle: Text('Em: ${fb['created_at'].substring(0, 10)}', style: TextStyle(color: Colors.white54)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            //FAZER A LÓGICA DE EDITAR AQUI (SE QUISERMOS)
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteFeedback(fb['id']),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            SizedBox(height: 24),
+          ],
         ),
       ),
     );
