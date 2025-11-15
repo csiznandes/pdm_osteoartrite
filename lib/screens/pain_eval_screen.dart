@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
+import '../widgets/body_map.dart';
 
 class PainEvalScreen extends StatefulWidget {
   @override
@@ -170,9 +171,22 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
                   Text('Selecione/Clique no corpo ou descreva a localização:', style: TextStyle(color: Colors.white70)),
                   SizedBox(height: 8),
                   Container(
-                    height: 200,
-                    color: Colors.white12,
-                    child: Center(child: Text('[Mapa Corporal Aqui]', style: TextStyle(color: Colors.white54))),
+                    height: 350,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: BodyMap(
+                      onAreaSelected: (area) {
+                        setState(() {
+                          _locationController.text = area;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Área selecionada: $area')),
+                        );
+                      },
+                    ),
                   ),
                   SizedBox(height: 16),
                   TextField(
