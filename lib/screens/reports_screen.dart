@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
 
@@ -74,7 +76,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Gráfico de Evolução da Dor (Mensal)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Gráfico de Evolução da Dor', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 16),
             FutureBuilder<List<dynamic>>(
               future: _painFuture,
@@ -87,21 +89,70 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   return Text('Nenhum registro de dor para exibir.', style: TextStyle(color: Colors.white70));
                 }
 
-                final data = snapshot.data!;
-                final latestEntries = data.length > 5 ? data.sublist(data.length - 5) : data; 
-                
+                final painData = snapshot.data!;
+                final spots = <FlSpot>[];
+                for (var i = 0; i < painData.length; i++) {
+                  final entry = painData[i];
+                  final score = (entry['score'] as num).toDouble();
+                  spots.add(FlSpot(i.toDouble(), score));
+                }
+
                 return Container(
-                  height: 200,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Gráfico Simulado\nÚltimas 5 notas de dor (Score/Data):\n${latestEntries.map((e) => '${e['score']} em ${e['created_at'].substring(5, 10)}').join(', ')}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
+                  height: 250,
+                  padding: const EdgeInsets.only(right: 16, top: 16),
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(show: false),
+                      titlesData: FlTitlesData(
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 30,
+                            getTitlesWidget: (value, meta) {
+                              final index = value.toInt();
+                              if (index < painData.length) {
+                                final date = DateTime.parse(painData[index]['created_at']);
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  child: Text(DateFormat('dd/MM').format(date), style: TextStyle(color: Colors.white70, fontSize: 10)),
+                                );
+                              }
+                              return Container();
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            getTitlesWidget: (value, meta) => Text(value.toInt().toString(), style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          ),
+                        ),
+                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(color: Colors.white24, width: 1),
+                      ),
+                      minX: 0,
+                      maxX: (painData.length - 1).toDouble(),
+                      minY: 0,
+                      maxY: 10,
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: Colors.amber,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: Colors.amber.withOpacity(0.3),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
