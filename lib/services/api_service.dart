@@ -36,7 +36,6 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  // PAIN
   Future<Map<String, dynamic>> addPain(int id, int score, String location) async {
     final res = await http.post(
       Uri.parse('$baseUrl/user/$id/pain'),
@@ -51,7 +50,6 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  // AGENDA
   Future<Map<String, dynamic>> addAgenda(int id, Map<String, dynamic> payload) async {
     final res = await http.post(
       Uri.parse('$baseUrl/user/$id/agenda'),
@@ -70,7 +68,6 @@ class ApiService {
     await http.delete(Uri.parse('$baseUrl/user/$id/agenda/$itemId'));
   }
 
-  // FEEDBACK
   Future<List<dynamic>> getFeedback(int id) async {
     final res = await http.get(Uri.parse('$baseUrl/user/$id/feedback'));
     return jsonDecode(res.body);
@@ -89,7 +86,6 @@ class ApiService {
     await http.delete(Uri.parse('$baseUrl/user/$id/feedback/$fbId'));
   }
 
-  // TEXTOS FIXOS
   Future<Map<String, dynamic>> getTechniques() async {
     final res = await http.get(Uri.parse('$baseUrl/techniques'));
     return jsonDecode(res.body);

@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class ReportsScreen extends StatefulWidget {
   @override
@@ -20,6 +22,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void initState() {
     super.initState();
     _loadData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak("Tela de relatórios e feedbacks.");
+    });
   }
 
   void _loadData() {
@@ -170,17 +177,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
+              onTap: () => Provider.of<AccessibilityService>(context, listen: false)
+                .speak("Campo para escrever comentários e sugestões"),
             ),
             SizedBox(height: 16),
             _isSendingFeedback
                 ? Center(child: CircularProgressIndicator(color: Colors.white))
                 : ElevatedButton(
-                    onPressed: _addFeedback,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                    ),
+                    onPressed: () {
+                      Provider.of<AccessibilityService>(context, listen: false)
+                        .speak("Enviando feedback");
+                      _addFeedback();
+                    },
                     child: Text('Enviar Feedback'),
                   ),
             
@@ -217,7 +225,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             //FAZER A LÓGICA DE EDITAR AQUI (SE QUISERMOS)
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteFeedback(fb['id']),
+                              onPressed: () {
+                                Provider.of<AccessibilityService>(context, listen: false)
+                                    .speak("Excluir feedback");
+                                _deleteFeedback(fb['id']);
+                              },
                             ),
                           ],
                         ),

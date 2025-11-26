@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -23,6 +25,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _contrastPref = false;
   bool _voiceReadPref = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _speakScreenTitle();
+    });
+  }
+
+  void _speakScreenTitle() {
+    final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
+    accessibilityService.speak('Tela de Cadastro. Preencha seus dados.'); 
+  }
 
   void _submit() async {
     if (!_lgpdConsent) {
@@ -90,12 +105,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: InputDecoration(labelText: 'Email (Obrigatório)'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Email. Campo Obrigatório.'),
               ),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Senha (Obrigatório)'),
                 obscureText: true,
                 validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Senha. Campo Obrigatório.'),
               ),
               Divider(color: Colors.white24, height: 32),
 
@@ -111,6 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: InputDecoration(labelText: 'Sexo'),
                 items: ['Masculino', 'Feminino', 'Outro'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (v) => setState(() => _sex = v),
+                onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Sexo. Escolha entre: masculino, feminino e outro.'),
               ),
               TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone')),
               Divider(color: Colors.white24, height: 32),
@@ -140,7 +158,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CheckboxListTile(
                 title: Text('Leitura por Voz'),
                 value: _voiceReadPref,
-                onChanged: (v) => setState(() => _voiceReadPref = v!),
+                onChanged: (v) {
+                  setState(() => _voiceReadPref = v!);
+                  Provider.of<AccessibilityService>(context, listen: false).speak(
+                    v! ? 'Leitura por voz marcada.' : 'Leitura por voz desmarcada.',
+                  );
+                },
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: Colors.white,
                 checkColor: Colors.black,
@@ -151,7 +174,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CheckboxListTile(
                 title: Text('Concordo com a coleta e uso de dados conforme a LGPD.'),
                 value: _lgpdConsent,
-                onChanged: (v) => setState(() => _lgpdConsent = v!),
+                onChanged: (v) {
+                  setState(() => _lgpdConsent = v!);
+                  Provider.of<AccessibilityService>(context, listen: false).speak(
+                    v! ? 'Consentimento LGPD marcado.' : 'Consentimento LGPD desmarcado.',
+                  );
+                },
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: Colors.white,
                 checkColor: Colors.black,
@@ -175,7 +203,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _submit,
+                            onPressed: () {
+                              Provider.of<AccessibilityService>(context, listen: false).speak('Enviando cadastro');
+                              _submit();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.black,

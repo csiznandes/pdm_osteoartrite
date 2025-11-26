@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
 import '../widgets/body_map.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class PainEvalScreen extends StatefulWidget {
   @override
@@ -10,6 +12,16 @@ class PainEvalScreen extends StatefulWidget {
 }
 
 class _PainEvalScreenState extends State<PainEvalScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak(
+        "Tela de avaliação da dor. Ajuste o nível de dor no controle deslizante e selecione a localização no corpo."
+      );
+    });
+  }
   final ApiService _apiService = ApiService();
   double _painScore = 5.0;
   final _locationController = TextEditingController();
@@ -24,6 +36,8 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
   }
 
   void _showPainIndexDialog(BuildContext context) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Abrindo índice de dores.");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -80,6 +94,8 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
   }
 
   void _savePain() async {
+    Provider.of<AccessibilityService>(context, listen: false)
+      .speak("Salvando avaliação de dor.");
     if (UserSession.userId == null) return;
     setState(() => _isSaving = true);
 
@@ -89,6 +105,8 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
         _painScore.toInt(),
         _locationController.text,
       );
+      Provider.of<AccessibilityService>(context, listen: false)
+        .speak("Avaliação de dor salva com sucesso.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Avaliação de dor salva! ID: ${res['id']}')),
       );
@@ -159,7 +177,6 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
 
             Text('Onde você está sentindo dor?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            //Placeholder/simulação do mapa corporal - usar uma imagem/SVG com detecção de toque seria o ideal
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -182,6 +199,8 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
                         setState(() {
                           _locationController.text = area;
                         });
+                        Provider.of<AccessibilityService>(context, listen: false)
+                          .speak("Área selecionada: $area");
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Área selecionada: $area')),
                         );

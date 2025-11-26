@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class EducationScreen extends StatelessWidget {
+  
   final Map<String, String> _educationContent = {
     'O que é Osteoartrite': """
 **ENTENDENDO SUA CONDIÇÃO**
@@ -86,6 +89,8 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
   };
 
   void _showEducationDialog(BuildContext context, String title, String content) {
+    Provider.of<AccessibilityService>(context, listen: false)
+      .speak("Abrindo conteúdo: $title. ${content.replaceAll("\n", " ")}");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -126,6 +131,11 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
 
   @override
   Widget build(BuildContext context) {
+    Future.microtask(() {
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak("Tela de educação. Selecione um tema para aprender mais.");
+    });
+
     return Scaffold(
       appBar: AppBar(title: Text('Educação sobre Osteoartrite')),
       body: SingleChildScrollView(

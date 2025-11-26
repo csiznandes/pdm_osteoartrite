@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class TechniquesScreen extends StatefulWidget {
   @override
@@ -8,6 +10,15 @@ class TechniquesScreen extends StatefulWidget {
 
 class _TechniquesScreenState extends State<TechniquesScreen> {
   final ApiService _apiService = ApiService();
+
+  @override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Tela de técnicas de relaxamento e controle da dor.");
+  });
+}
   
   final Map<String, String> _techniqueContent = {
     'Alongamentos guiados': """
@@ -87,6 +98,8 @@ DICA: Pode usar óleo morno.
   };
 
   void _showTechniqueDialog(String title, String content) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Técnica: $title. ${content.replaceAll("\n", " ")}");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -114,7 +127,9 @@ DICA: Pode usar óleo morno.
                   icon: Icon(Icons.calendar_month, color: Colors.black),
                   label: Text('Adicionar Lembrete', style: TextStyle(color: Colors.black)),
                   onPressed: () {
-                    Navigator.pop(context); 
+                    Provider.of<AccessibilityService>(context, listen: false)
+                        .speak("Adicionar lembrete para a técnica $title");
+                    Navigator.pop(context);
                     Navigator.pushNamed(context, '/agenda');
                   },
                   style: ElevatedButton.styleFrom(
@@ -132,6 +147,9 @@ DICA: Pode usar óleo morno.
   void _showAlertsDialog() async {
     try {
       final alerts = await _apiService.getAlerts();
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak("Abrindo alertas de segurança.");
+      access.speak("Alertas: " + alerts.join(". "));
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -142,7 +160,7 @@ DICA: Pode usar óleo morno.
             crossAxisAlignment: CrossAxisAlignment.start,
             children: alerts.map<Widget>((alert) => Padding(
               padding: const EdgeInsets.only(bottom: 4.0),
-              child: Text("● $alert", style: TextStyle(color: Colors.white70)),
+              child: Text("● $alert", style: TextStyle(color: Colors.white70),),
             )).toList(),
           ),
           actions: [
@@ -166,7 +184,11 @@ DICA: Pode usar óleo morno.
       child: ElevatedButton.icon(
         icon: Icon(Icons.fitness_center, color: Colors.black),
         label: Text(title, style: TextStyle(color: Colors.black, fontSize: 16)),
-        onPressed: () => _showTechniqueDialog(title, _techniqueContent[title] ?? 'Conteúdo não encontrado.'),
+        onPressed: () {
+          Provider.of<AccessibilityService>(context, listen: false)
+              .speak("Abrindo técnica: $title");
+          _showTechniqueDialog(title, _techniqueContent[title] ?? 'Conteúdo não encontrado.');
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),

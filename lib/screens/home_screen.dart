@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
+    Future.microtask(() {
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak("Tela inicial. Escolha uma opção no menu.");
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Home - CuidaDor'),
@@ -52,7 +60,11 @@ class HomeScreen extends StatelessWidget {
       child: ElevatedButton.icon(
         icon: Icon(icon, color: Colors.black),
         label: Text(text, style: TextStyle(color: Colors.black, fontSize: 16)),
-        onPressed: () => Navigator.pushNamed(context, route),
+        onPressed: () {
+          Provider.of<AccessibilityService>(context, listen: false)
+              .speak("Abrindo $text");
+          Navigator.pushNamed(context, route);
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -62,6 +74,9 @@ class HomeScreen extends StatelessWidget {
   }
   
   void _showAlertsDialog(BuildContext context) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Abrindo alertas de segurança.");
+    access.speak("Pare se sentir tontura intensa. Não force se tiver dor.");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

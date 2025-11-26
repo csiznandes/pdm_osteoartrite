@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -29,6 +31,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _speakScreenTitle();
+    });
+  }
+
+  void _speakScreenTitle() {
+    final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
+    accessibilityService.speak('Tela de Perfil. Meus dados.'); 
   }
 
   Future<void> _loadProfile() async {
@@ -39,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final data = await _apiService.getUser(UserSession.userId!);
+      final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
       setState(() {
         _nameController.text = data['name'] ?? '';
         _ageController.text = data['age']?.toString() ?? '';
@@ -49,9 +60,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _lgpdConsent = data['lgpd_consent'] ?? false;
         
         final access = data['accessibility'] as Map<String, dynamic>? ?? {};
-        _fontPref = access['font'] ?? false;
-        _contrastPref = access['contrast'] ?? false;
-        _voiceReadPref = access['voice_read'] ?? false;
+        accessibilityService.setPreferences(
+          font: access['font'] ?? false,
+          contrast: access['contrast'] ?? false,
+          voiceRead: access['voice_read'] ?? false,
+        );
         
         _isLoading = false;
       });
@@ -67,6 +80,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_formKey.currentState!.validate() && UserSession.userId != null) {
       setState(() => _isSaving = true);
 
+      final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
+
       final payload = {
         'name': _nameController.text,
         'age': int.tryParse(_ageController.text),
@@ -75,9 +90,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'diagnosis': _diagnosisController.text,
         'comorbidities': _comorbiditiesController.text,
         'accessibility': {
-          'font': _fontPref,
-          'contrast': _contrastPref,
-          'voice_read': _voiceReadPref,
+          'font': accessibilityService.fontPref,
+          'contrast': accessibilityService.contrastPref,
+          'voice_read': accessibilityService.voiceReadPref,
         },
         'lgpd_consent': _lgpdConsent,
       };
@@ -111,61 +126,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text('Dados Pessoais', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    TextFormField(controller: _nameController, decoration: InputDecoration(labelText: 'Nome')),
+                    TextFormField(
+                      controller: _nameController, 
+                      decoration: InputDecoration(labelText: 'Nome'),
+                      onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Nome'),
+                    ),
                     TextFormField(
                       controller: _ageController,
                       decoration: InputDecoration(labelText: 'Idade'),
                       keyboardType: TextInputType.number,
+                      onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Idade'),
                     ),
                     DropdownButtonFormField<String>(
                       value: _sex,
                       decoration: InputDecoration(labelText: 'Sexo'),
                       items: ['Masculino', 'Feminino', 'Outro'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                       onChanged: (v) => setState(() => _sex = v),
+                      onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Sexo. Escolha entre masculino, feminino ou outro'),
                     ),
-                    TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone')),
+                    TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Contato ou Telefone'),),
                     Divider(color: Colors.white24, height: 32),
 
                     Text('Dados Clínicos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    TextFormField(controller: _diagnosisController, decoration: InputDecoration(labelText: 'Diagnóstico (Ex: Osteoartrite)')),
-                    TextFormField(controller: _comorbiditiesController, decoration: InputDecoration(labelText: 'Comorbidades')),
+                    TextFormField(controller: _diagnosisController, decoration: InputDecoration(labelText: 'Diagnóstico (Ex: Osteoartrite)'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Diagnóstico'),),
+                    TextFormField(controller: _comorbiditiesController, decoration: InputDecoration(labelText: 'Comorbidades'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Comorbidades'),),
                     Divider(color: Colors.white24, height: 32),
 
                     Text('Preferências de Acessibilidade', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    CheckboxListTile(
-                      title: Text('Fonte (Tamanho/Estilo)'),
-                      value: _fontPref,
-                      onChanged: (v) => setState(() => _fontPref = v!),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: Colors.white,
-                      checkColor: Colors.black,
-                    ),
-                    CheckboxListTile(
-                      title: Text('Contraste Elevado'),
-                      value: _contrastPref,
-                      onChanged: (v) => setState(() => _contrastPref = v!),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: Colors.white,
-                      checkColor: Colors.black,
-                    ),
-                    CheckboxListTile(
-                      title: Text('Leitura por Voz'),
-                      value: _voiceReadPref,
-                      onChanged: (v) => setState(() => _voiceReadPref = v!),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: Colors.white,
-                      checkColor: Colors.black,
-                    ),
-                    Divider(color: Colors.white24, height: 32),
 
-                    Text('Consentimento LGPD', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    CheckboxListTile(
-                      title: Text('Concordo com a coleta e uso de dados conforme a LGPD.'),
-                      value: _lgpdConsent,
-                      onChanged: (v) => setState(() => _lgpdConsent = v!),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: Colors.white,
-                      checkColor: Colors.black,
+                    Consumer<AccessibilityService>(
+                      builder: (context, accessService, child) {
+                        return Column(
+                          children: [
+                            CheckboxListTile(
+                              title: Text('Fonte (Tamanho/Estilo)'),
+                              value: accessService.fontPref,
+                              onChanged: (v) {
+                                accessService.toggleFontPref(v!);
+                              },
+                            ),
+                            
+                            CheckboxListTile(
+                              title: Text('Contraste Elevado'),
+                              value: accessService.contrastPref,
+                              onChanged: (v) => accessService.toggleContrastPref(v!),
+                            ),
+                            
+                            CheckboxListTile(
+                              title: Text('Leitura por Voz'),
+                              value: accessService.voiceReadPref,
+                              onChanged: (v) => accessService.toggleVoiceReadPref(v!),
+                            ),
+
+                            CheckboxListTile(
+                              title: Text('Concordo com a coleta e uso de dados conforme a LGPD.'),
+                              value: _lgpdConsent,
+                              onChanged: (v) => setState(() => _lgpdConsent = v!),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     SizedBox(height: 32),
 
@@ -175,7 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () {
+                                    Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
+                                    Navigator.pop(context);
+                                  },
                                   style: OutlinedButton.styleFrom(
                                     side: BorderSide(color: Colors.white),
                                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -186,7 +209,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               SizedBox(width: 16),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: _updateProfile,
+                                  onPressed: () {
+                                    Provider.of<AccessibilityService>(context, listen: false).speak('Atualizando perfil');
+                                    _updateProfile();
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
