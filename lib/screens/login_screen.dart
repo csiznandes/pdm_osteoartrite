@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart'; 
 import '../utils/user_session.dart'; 
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,6 +18,10 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     setState(() {
       _isLoading = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final access = Provider.of<AccessibilityService>(context, listen: false);
+        access.speak("Tela de Login.");
+      });
     });
 
     try {
@@ -45,6 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Tela de Login. Aplicativo CuidaDor");
     return Scaffold(
       appBar: AppBar(title: Text('Login')),
       body: Center(
@@ -60,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 48),
 
               TextField(
+                onTap: () => access.speak("Insira seu email."),
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -71,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 16),
 
               TextField(
+                onTap: () => access.speak("Insira sua senha."),
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -85,10 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    //FAZER A LÓGICA DE REDEFINIÇÃO DE SENHA
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Funcionalidade em desenvolvimento.')),
-                    );
+                    Navigator.pushNamed(context, '/reset-password');
                   },
                   child: Text(
                     'Esqueceu a senha?',
@@ -128,6 +135,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 16),
+
+                    // ElevatedButton.icon(
+                    //   onPressed: () {
+                    //     Provider.of<AccessibilityService>(context, listen: false)
+                    //         .speak("Tela de login. Digite seu email e sua senha para entrar.");
+                    //   },
+                    //   icon: Icon(Icons.volume_up),
+                    //   label: Text("Ativar leitura por voz"),
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: Colors.white,
+                    //     foregroundColor: Colors.black,
+                    //     padding: EdgeInsets.symmetric(vertical: 14),
+                    //   ),
+                    // ),
             ],
           ),
         ),

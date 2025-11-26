@@ -18,11 +18,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _contactController = TextEditingController();
   final _diagnosisController = TextEditingController();
   final _comorbiditiesController = TextEditingController();
+  bool _obscurePassword = true;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   String? _sex;
   bool _lgpdConsent = false;
-  bool _fontPref = false;
-  bool _contrastPref = false;
-  bool _voiceReadPref = false;
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -58,6 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _comorbiditiesController.text = data['comorbidities'] ?? '';
         _sex = data['sex'];
         _lgpdConsent = data['lgpd_consent'] ?? false;
+        _emailController.text = data['email'] ?? '';
+        _passwordController.text = '';
         
         final access = data['accessibility'] as Map<String, dynamic>? ?? {};
         accessibilityService.setPreferences(
@@ -89,6 +92,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'contact': _contactController.text,
         'diagnosis': _diagnosisController.text,
         'comorbidities': _comorbiditiesController.text,
+        'email': _emailController.text,
+        'password': _passwordController.text.isEmpty ? null : _passwordController.text,
         'accessibility': {
           'font': accessibilityService.fontPref,
           'contrast': accessibilityService.contrastPref,
@@ -127,6 +132,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: <Widget>[
                     Text('Dados Pessoais', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        final emailRegex = RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+$");
+
+                        if (value == null || value.isEmpty) return 'Digite um email';
+                        if (!emailRegex.hasMatch(value)) return 'Email inválido';
+
+                        return null;
+                      },
+                      onTap: () => Provider.of<AccessibilityService>(context, listen: false)
+                          .speak('Editar email'),
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Senha',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.white70,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Digite uma senha';
+                        if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
+                        return null;
+                      },
+                      onTap: () => Provider.of<AccessibilityService>(context, listen: false)
+                          .speak('Editar senha'),
+                    ),
+                    SizedBox(height: 20),
+
+                    TextFormField(
                       controller: _nameController, 
                       decoration: InputDecoration(labelText: 'Nome'),
                       onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Nome'),
@@ -135,8 +183,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       controller: _ageController,
                       decoration: InputDecoration(labelText: 'Idade'),
                       keyboardType: TextInputType.number,
-                      onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Idade'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Digite sua idade';
+                        final number = int.tryParse(value);
+                        if (number == null) return 'Idade deve ser um número';
+                        if (number < 1 || number > 120) return 'Idade inválida';
+                        return null;
+                      },
                     ),
+
                     DropdownButtonFormField<String>(
                       value: _sex,
                       decoration: InputDecoration(labelText: 'Sexo'),
@@ -144,9 +199,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onChanged: (v) => setState(() => _sex = v),
                       onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Sexo. Escolha entre masculino, feminino ou outro'),
                     ),
-                    TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Contato ou Telefone'),),
+                    TextFormField(
+                      controller: _contactController,
+                      decoration: InputDecoration(labelText: 'Contato/Telefone'),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        final phoneRegex = RegExp(r'^\d{8,11}$');
+                        if (value == null || value.isEmpty) return 'Digite um telefone';
+                        if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'\D'), ''))) {
+                          return 'Telefone inválido (use 8 a 11 números)';
+                        }
+                        return null;
+                      },
+                    ),
                     Divider(color: Colors.white24, height: 32),
-
                     Text('Dados Clínicos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     TextFormField(controller: _diagnosisController, decoration: InputDecoration(labelText: 'Diagnóstico (Ex: Osteoartrite)'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Diagnóstico'),),
                     TextFormField(controller: _comorbiditiesController, decoration: InputDecoration(labelText: 'Comorbidades'), onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Comorbidades'),),

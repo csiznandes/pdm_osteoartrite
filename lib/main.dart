@@ -8,6 +8,7 @@ import 'screens/techniques_screen.dart';
 import 'screens/education_screen.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/reports_screen.dart';
+import 'screens/reset_password_screen.dart';
 import 'services/accessibility_service.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,7 @@ class CuidaDorApp extends StatelessWidget {
     
         final Color primaryTextColor = accessService.contrastPref ? Colors.black : Colors.white;
         final Color primaryBackgroundColor = accessService.contrastPref ? Colors.white : Colors.black;
-        final Color accentColor = accessService.contrastPref ? Colors.red.shade700 : Colors.blueGrey;
+        final Color accentColor = accessService.contrastPref ? Colors.red.shade700 : Colors.red.shade700;
         
         final theme = ThemeData(
           brightness: Brightness.dark,
@@ -87,6 +88,7 @@ class CuidaDorApp extends StatelessWidget {
             '/education': (_) => EducationScreen(),
             '/agenda': (_) => AgendaScreen(),
             '/reports': (_) => ReportsScreen(),
+            '/reset-password': (context) => ResetPasswordScreen(),
           },
         );
       },

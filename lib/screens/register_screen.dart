@@ -104,14 +104,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'Email (Obrigatório)'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                validator: (value) {
+                final emailRegex = RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+$");
+
+                if (value == null || value.isEmpty) return 'Digite um email';
+                if (!emailRegex.hasMatch(value)) return 'Email inválido';
+
+                return null;
+              },
                 onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Email. Campo Obrigatório.'),
               ),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Senha (Obrigatório)'),
                 obscureText: true,
-                validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Digite uma senha';
+                  if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
+                  return null;
+                },
                 onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Senha. Campo Obrigatório.'),
               ),
               Divider(color: Colors.white24, height: 32),
@@ -122,6 +133,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _ageController,
                 decoration: InputDecoration(labelText: 'Idade'),
                 keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Digite sua idade';
+                  final number = int.tryParse(value);
+                  if (number == null) return 'Idade deve ser um número';
+                  if (number < 1 || number > 120) return 'Idade inválida';
+                  return null;
+                },
               ),
               DropdownButtonFormField<String>(
                 value: _sex,
@@ -130,7 +148,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (v) => setState(() => _sex = v),
                 onTap: () => Provider.of<AccessibilityService>(context, listen: false).speak('Sexo. Escolha entre: masculino, feminino e outro.'),
               ),
-              TextFormField(controller: _contactController, decoration: InputDecoration(labelText: 'Contato/Telefone')),
+              TextFormField(
+                controller: _contactController,
+                decoration: InputDecoration(labelText: 'Contato/Telefone'),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  final phoneRegex = RegExp(r'^\d{8,11}$');
+                  if (value == null || value.isEmpty) return 'Digite um telefone';
+                  if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'\D'), ''))) {
+                    return 'Telefone inválido (use 8 a 11 números)';
+                  }
+                  return null;
+                },
+              ),
               Divider(color: Colors.white24, height: 32),
 
               Text('Dados Clínicos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

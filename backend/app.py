@@ -55,12 +55,52 @@ class Feedback(db.Model):
 with app.app_context():
     db.create_all()
 
+import re
+
+def is_valid_email(email):
+    return re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email)
+
+def is_valid_phone(phone):
+    return re.match(r"^\d{8,11}$", phone)
+
+def validate_register(data):
+    errors = []
+
+    email = data.get("email")
+    if not email or not is_valid_email(email):
+        errors.append("Email inválido")
+
+    password = data.get("password")
+    if not password or len(password) < 6:
+        errors.append("Senha deve ter pelo menos 6 caracteres")
+
+    age = data.get("age")
+    if age is not None:
+        try:
+            age = int(age)
+            if age < 1 or age > 120:
+                errors.append("Idade deve estar entre 1 e 120")
+        except:
+            errors.append("Idade deve ser numérica")
+
+    contact = data.get("contact")
+    if contact:
+        only_numbers = re.sub(r"\D", "", contact)
+        if not is_valid_phone(only_numbers):
+            errors.append("Telefone inválido (use 8 a 11 números)")
+
+    if not data.get("lgpd_consent"):
+        errors.append("É obrigatório aceitar o consentimento LGPD")
+
+    return errors
+
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
 
-    if not data.get("email") or not data.get("password"):
-        return jsonify({"error": "Email e senha são obrigatórios"}), 400
+    errors = validate_register(data)
+    if errors:
+        return jsonify({"error": errors}), 400
 
     if User.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "Email já cadastrado"}), 400
@@ -75,12 +115,14 @@ def register():
         diagnosis=data.get("diagnosis"),
         comorbidities=data.get("comorbidities"),
         accessibility=json.dumps(data.get("accessibility", {})),
-        lgpd_consent=bool(data.get("lgpd_consent", False))
+        lgpd_consent=data.get("lgpd_consent")
     )
+
     db.session.add(user)
     db.session.commit()
 
     return jsonify({"message": "Registro efetuado", "user_id": user.id}), 201
+
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -157,8 +199,8 @@ def get_pains(user_id):
 @app.route("/user/<int:user_id>/agenda", methods=["POST"])
 def add_agenda(user_id):
     data = request.json
-    date = datetime.fromisoformat(data["date"]).date()
-    time = datetime.fromisoformat(data["time"]).time()
+    date = datetime.strptime(data["date"], "%Y-%m-%d").date()
+    time = datetime.strptime(data["time"], "%H:%M:%S").time()
 
     item = AgendaItem(
         user_id=user_id,
@@ -240,6 +282,31 @@ def alerts():
         "Não force se tiver dor",
         "Consulte seu médico se tiver dúvidas"
     ])
+
+@app.route("/reset_password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email obrigatório"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "Email não encontrado"}), 404
+
+    temp_password = "123456" 
+
+    user.password_hash = generate_password_hash(temp_password)
+    db.session.commit()
+
+    print(f"Senha temporária definida para {email}: {temp_password}")
+
+    return jsonify({
+        "message": "password_reset",
+        "temp_password": temp_password
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

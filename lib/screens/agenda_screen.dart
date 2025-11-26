@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../services/accessibility_service.dart';
 
 class AgendaScreen extends StatefulWidget {
   @override
@@ -20,6 +22,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
   void initState() {
     super.initState();
     _loadAgenda();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final access = Provider.of<AccessibilityService>(context, listen: false);
+      access.speak("Tela de Agenda. Adicione lembretes de exercícios e visualize seus compromissos.");
+    });
   }
 
   Future<void> _loadAgenda() async {
@@ -31,6 +38,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Selecionar data");
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
@@ -49,10 +59,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+      access.speak("Data selecionada: ${DateFormat('dd/MM/yyyy').format(picked)}");
+    }
   }
 
   Future<void> _selectTime(BuildContext context) async {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.speak("Selecionar horário");
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime ?? TimeOfDay.now(),
@@ -69,11 +86,18 @@ class _AgendaScreenState extends State<AgendaScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedTime = picked);
+
+    if (picked != null) {
+      setState(() => _selectedTime = picked);
+      access.speak("Horário selecionado: ${picked.hour}:${picked.minute.toString().padLeft(2, '0')}");
+    }
   }
 
   void _addAgendaItem() async {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+
     if (_selectedDate == null || _selectedTime == null || _descriptionController.text.isEmpty || UserSession.userId == null) {
+      access.speak("Preencha data, hora e descrição.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Preencha data, hora e descrição.')),
       );
@@ -84,7 +108,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
     try {
       final dateIso = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-      final timeIso = _selectedTime!.format(context);
+
       final payload = {
         'date': dateIso,
         'time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00',
@@ -92,16 +116,23 @@ class _AgendaScreenState extends State<AgendaScreen> {
       };
 
       await _apiService.addAgenda(UserSession.userId!, payload);
+
+      access.speak("Lembrete adicionado com sucesso.");
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lembrete adicionado!')),
       );
+
       _descriptionController.clear();
       setState(() {
         _selectedDate = null;
         _selectedTime = null;
       });
+
       _loadAgenda();
+
     } catch (e) {
+      access.speak("Erro ao adicionar lembrete.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao adicionar lembrete: $e')),
       );
@@ -111,14 +142,20 @@ class _AgendaScreenState extends State<AgendaScreen> {
   }
 
   void _deleteAgendaItem(int itemId) async {
-    if (UserSession.userId == null) return;
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+
     try {
       await _apiService.deleteAgenda(UserSession.userId!, itemId);
+
+      access.speak("Lembrete excluído.");
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lembrete excluído.')),
       );
+
       _loadAgenda();
     } catch (e) {
+      access.speak("Erro ao excluir lembrete.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao excluir: $e')),
       );
@@ -127,8 +164,20 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+
     return Scaffold(
-      appBar: AppBar(title: Text('Agenda e Lembretes')),
+      appBar: AppBar(
+        title: Text('Agenda e Lembretes'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            access.stopSpeaking();
+            Navigator.pop(context);
+          },
+        ),
+      ),
+
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -139,15 +188,20 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 children: [
                   Text('Novo Lembrete', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   SizedBox(height: 16),
+
                   OutlinedButton.icon(
                     icon: Icon(Icons.calendar_today, color: Colors.white),
                     label: Text(
                       _selectedDate == null ? 'Selecionar Data' : DateFormat('dd/MM/yyyy').format(_selectedDate!),
                       style: TextStyle(color: Colors.white),
                     ),
-                    onPressed: () => _selectDate(context),
+                    onPressed: () {
+                      access.speak("Campo de data");
+                      _selectDate(context);
+                    },
                     style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.white)),
                   ),
+
                   SizedBox(height: 8),
 
                   OutlinedButton.icon(
@@ -156,9 +210,13 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       _selectedTime == null ? 'Selecionar Hora' : _selectedTime!.format(context),
                       style: TextStyle(color: Colors.white),
                     ),
-                    onPressed: () => _selectTime(context),
+                    onPressed: () {
+                      access.speak("Campo de hora");
+                      _selectTime(context);
+                    },
                     style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.white)),
                   ),
+
                   SizedBox(height: 16),
 
                   TextField(
@@ -167,7 +225,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       labelText: 'Descrição (Ex: Alongamento de Mãos)',
                       border: OutlineInputBorder(),
                     ),
+                    onTap: () => access.speak("Digite a descrição do lembrete"),
                   ),
+
                   SizedBox(height: 16),
 
                   _isAdding
@@ -181,6 +241,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           ),
                           child: Text('Adicionar à Agenda'),
                         ),
+
                   Divider(color: Colors.white24, height: 32),
                   Text('Meus Lembretes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
@@ -196,28 +257,44 @@ class _AgendaScreenState extends State<AgendaScreen> {
               } else if (snapshot.hasError) {
                 return SliverFillRemaining(child: Center(child: Text('Erro ao carregar lembretes: ${snapshot.error}')));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return SliverToBoxAdapter(child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text('Nenhum lembrete agendado.', style: TextStyle(color: Colors.white70)),
-                ));
+                access.speak("Nenhum lembrete agendado.");
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Nenhum lembrete agendado.', style: TextStyle(color: Colors.white70)),
+                  ),
+                );
               }
 
               final items = snapshot.data!;
+
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final item = items[index];
+
                     return ListTile(
                       title: Text(item['description'], style: TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(
                         'Data: ${item['date']} | Hora: ${item['time']?.substring(0, 5)}',
                         style: TextStyle(color: Colors.white70),
                       ),
+                      leading: Icon(Icons.notifications_active, color: Colors.amber),
+
+                      onTap: () {
+                        access.speak(
+                          "Lembrete: ${item['description']}. "
+                          "Data ${item['date']} às ${item['time']?.substring(0,5)}"
+                        );
+                      },
+
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteAgendaItem(item['id']),
+                        onPressed: () {
+                          access.speak("Excluir lembrete: ${item['description']}");
+                          _deleteAgendaItem(item['id']);
+                        },
                       ),
-                      leading: Icon(Icons.notifications_active, color: Colors.amber),
                     );
                   },
                   childCount: items.length,
