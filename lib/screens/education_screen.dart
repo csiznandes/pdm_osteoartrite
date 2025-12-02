@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
+import '../widgets/custom_dialog.dart';
 
 class EducationScreen extends StatelessWidget {
   final Map<String, String> _educationContent = {
@@ -185,16 +186,14 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
 ''',
   };
 
+  // Função auxiliar para criar a lista de TextSpan a partir do conteúdo em string
   List<TextSpan> _buildTextSpans(String content, BuildContext context) {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
-    final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
-    final highContrast = accessibilityService.contrastPref;
 
     final baseStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16);
     final boldStyle = baseStyle?.copyWith(fontWeight: FontWeight.bold, fontSize: 18);
     final italicStyle = baseStyle?.copyWith(fontStyle: FontStyle.italic);
-    final bulletStyle = baseStyle?.copyWith(fontSize: 18);
 
     for (final line in lines) {
       if (line.startsWith('**') && line.endsWith('**')) {
@@ -202,7 +201,9 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
       } else if (line.startsWith('*') && line.endsWith('*')) {
         spans.add(TextSpan(text: '${line.substring(1, line.length - 1)}\n\n', style: italicStyle));
       } else if (line.startsWith('-') || line.startsWith('✓') || line.startsWith('✅') || line.startsWith('❌') || line.startsWith('🐟') || line.startsWith('🫒') || line.startsWith('🥬') || line.startsWith('🍓') || line.startsWith('🧄') || line.startsWith('🫚') || line.startsWith('🌰') || line.startsWith('🍊')) {
-        spans.add(TextSpan(text: '• ${line.substring(2)}\n', style: bulletStyle));
+        final marker = line.substring(0, 1);
+        final text = line.substring(1).trim();
+        spans.add(TextSpan(text: '$marker $text\n', style: baseStyle));
       } else if (line.trim().isEmpty) {
         spans.add(const TextSpan(text: '\n'));
       } else {
@@ -213,35 +214,13 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
   }
 
   void _showEducationDialog(BuildContext context, String title, String content) {
-    Provider.of<AccessibilityService>(context, listen: false)
-      .speak("Abrindo conteúdo: $title. ${content.replaceAll('\n', ' ').replaceAll('**', '').replaceAll('*', '')}");
-
-    showDialog(
+    showContentDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        titlePadding: EdgeInsets.zero,
-        title: AppBar(
-          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          title: Text(title, style: Theme.of(context).appBarTheme.titleTextStyle),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodyLarge?.color),
-              onPressed: () {
-                Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
-                Navigator.pop(context);
-              },
-            )
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: RichText(
-            text: TextSpan(
-              children: _buildTextSpans(content, context),
-            ),
-          ),
+      title: title,
+      initialNarration: "Abrindo conteúdo: $title. ${content.replaceAll('\n', ' ').replaceAll('**', '').replaceAll('*', '')}",
+      content: RichText(
+        text: TextSpan(
+          children: _buildTextSpans(content, context),
         ),
       ),
     );
@@ -283,7 +262,10 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
             _buildEducationButton(context, 'Saúde e Bem-estar'),
             const SizedBox(height: 24),
             OutlinedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                 Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
+                 Navigator.pop(context);
+              },
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white),
                 padding: const EdgeInsets.symmetric(vertical: 16),
