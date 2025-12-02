@@ -30,15 +30,11 @@ class AppDrawer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    //COLOCAR UM LOGO BONITINHO AQUI
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Colors.white12,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(child: Text('Logo', style: TextStyle(color: Colors.white))),
+                    // Logo
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Image.asset('assets/corpo_icon.jpg', fit: BoxFit.cover),
                     ),
                     SizedBox(height: 12),
                     Text('Menu', style: TextStyle(color: Colors.white, fontSize: 20)),

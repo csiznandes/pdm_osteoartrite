@@ -61,6 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              SizedBox(
+                width: 150,
+                height: 150,
+                child: Image.asset('assets/corpo_icon.jpg', fit: BoxFit.cover),
+              ),
+              SizedBox(height: 24),
               Text(
                 'CuidaDor',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),

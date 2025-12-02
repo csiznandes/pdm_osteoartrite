@@ -22,45 +22,45 @@ void initState() {
   
   final Map<String, String> _techniqueContent = {
     'Alongamentos guiados': """
-TÉCNICA: **Alongamento de Mãos**
-DURAÇÃO: 5 minutos
-BOM PARA: Rigidez matinal
+TÉCNICA: Alongamento de Mãos.
+DURAÇÃO: 5 minutos.
+BOM PARA: Rigidez matinal.
 COMO FAZER:
-1. Sente-se confortavelmente
-2. Abra as mãos devagar
-3. Feche formando punho suave
-4. Repita 10 vezes
-5. Descanse
+1. Sente-se confortavelmente.
+2. Abra as mãos devagar.
+3. Feche formando punho suave.
+4. Repita 10 vezes.
+5. Descanse.
 ATENÇÃO: Pare se sentir dor forte
 [Vídeo demonstrativo]
 [Lembrete diário]
 """,
     'Respiração profunda': """
-TÉCNICA: **RESPIRAÇÃO PROFUNDA**
+TÉCNICA: RESPIRAÇÃO PROFUNDA
 DURAÇÃO: 5 minutos
 BENEFÍCIO: Reduz tensão e ansiedade
 COMO FAZER:
-1. Sente-se confortavelmente ou deite
-2. Coloque uma mão na barriga
-3. Inspire pelo nariz contando até 4
-4. Sinta a barriga subir (não o peito)
-5. Expire pela boca contando até 6
-6. Repita 10 vezes
+1. Sente-se confortavelmente ou deite.
+2. Coloque uma mão na barriga.
+3. Inspire pelo nariz contando até 4.
+4. Sinta a barriga subir (não o peito).
+5. Expire pela boca contando até 6.
+6. Repita 10 vezes.
 DICA: Faça antes de dormir
 """,
     'Respiração 4-7-8': """
-TÉCNICA: **RESPIRAÇÃO 4-7-8**
+TÉCNICA: RESPIRAÇÃO 4-7-8
 DURAÇÃO: 3-5 minutos
 BENEFÍCIO: Acalma e melhora o sono
 COMO FAZER:
-1. Inspire pelo nariz: conte até 4
-2. Segure o ar: conte até 7
-3. Expire pela boca: conte até 8
-4. Faça 4 ciclos completos
+1. Inspire pelo nariz: conte até 4.
+2. Segure o ar: conte até 7.
+3. Expire pela boca: conte até 8.
+4. Faça 4 ciclos completos.
 OBS: Pode dar leve tontura no início - é normal
 """,
     'Suspiro de alívio': """
-TÉCNICA: **SUSPIRO DE ALÍVIO**
+TÉCNICA: SUSPIRO DE ALÍVIO
 DURAÇÃO: 2 minutos
 BENEFÍCIO: Libera tensão rápida
 COMO FAZER:
@@ -71,7 +71,7 @@ COMO FAZER:
 "Aaaah..." - solte o som!
 """,
     'Relaxamento muscular': """
-TÉCNICA: **RELAXAMENTO MUSCULAR**
+TÉCNICA: RELAXAMENTO MUSCULAR
 DURAÇÃO: 10-15 minutos
 BENEFÍCIO: Alivia tensão e dor muscular
 COMO FAZER:
@@ -84,7 +84,7 @@ ATENÇÃO: Não force articulações doloridas
 [Áudio guiado disponível]
 """,
     'Toque calmante': """
-TÉCNICA: **TOQUE CALMANTE**
+TÉCNICA: TOQUE CALMANTE
 DURAÇÃO: 5 minutos
 BENEFÍCIO: Conforto imediato
 COMO FAZER:
