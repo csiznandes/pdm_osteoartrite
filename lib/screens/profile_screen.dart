@@ -11,7 +11,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ApiService _apiService = ApiService();
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); //Chave para validação do formulário.
 
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
@@ -41,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
     accessibilityService.speak('Tela de Perfil. Meus dados.'); 
   }
-
+  //Função assíncrona para buscar os dados do usuário na API.
   Future<void> _loadProfile() async {
     if (UserSession.userId == null) {
       setState(() => _isLoading = false);
@@ -49,8 +49,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
+      //Chama a API para obter os dados do usuário logado.
       final data = await _apiService.getUser(UserSession.userId!);
       final accessibilityService = Provider.of<AccessibilityService>(context, listen: false);
+      //Preenche os TextControllers com os dados recebidos da API.
       setState(() {
         _nameController.text = data['name'] ?? '';
         _ageController.text = data['age']?.toString() ?? '';
@@ -78,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _isLoading = false);
     }
   }
-
+  //Função assíncrona para enviar as alterações do perfil para a API.
   void _updateProfile() async {
     if (_formKey.currentState!.validate() && UserSession.userId != null) {
       setState(() => _isSaving = true);
@@ -101,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
         'lgpd_consent': _lgpdConsent,
       };
-
+      //Chama a API para atualizar o usuário.
       try {
         final res = await _apiService.updateUser(UserSession.userId!, payload);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
   }
-
+  //Design da tela
   @override
   Widget build(BuildContext context) {
     return Scaffold(

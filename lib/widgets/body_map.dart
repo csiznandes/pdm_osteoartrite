@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//O widget BodyMap aceita uma função de callback para notificar o componente pai sobre a área selecionada.
 class BodyMap extends StatelessWidget {
   final Function(String selectedArea) onAreaSelected;
 
@@ -98,7 +99,7 @@ class BodyMap extends StatelessWidget {
     );
   }
 }
-
+//Widget privado e transparente que detecta o toque e retorna o rótulo da área.
 class _Hotspot extends StatelessWidget {
   final String label;
   final Function(String) onTap;

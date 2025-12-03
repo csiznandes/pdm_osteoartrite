@@ -15,6 +15,7 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
   @override
   void initState() {
     super.initState();
+    //Acessibilidade: Anuncia o propósito da tela ao carregar.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final access = Provider.of<AccessibilityService>(context, listen: false);
       access.speak(
@@ -24,9 +25,9 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
   }
   final ApiService _apiService = ApiService();
   double _painScore = 5.0;
-  final _locationController = TextEditingController();
+  final _locationController = TextEditingController(); //Controlador para o campo de texto da localização (pode ser preenchido pelo BodyMap).
   bool _isSaving = false;
-
+  //Getter para determinar a cor do texto/slider baseado na pontuação de dor
   Color get _painColor {
     if (_painScore <= 2) return Colors.green;
     if (_painScore <= 4) return Colors.lime;
@@ -34,7 +35,7 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
     if (_painScore <= 8) return Colors.orange;
     return Colors.red;
   }
-
+  //Função para exibir o índice de dor.
   void _showPainIndexDialog(BuildContext context) {
     final access = Provider.of<AccessibilityService>(context, listen: false);
     access.speak("Abrindo índice de dores.");
@@ -71,7 +72,7 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
       ),
     );
   }
-  
+  //Widget auxiliar para construir cada item da escala de dor no diálogo.
   Widget _buildIndexItem(String score, String description, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -92,7 +93,7 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
       ),
     );
   }
-
+  //Função assíncrona para salvar a avaliação de dor na API.
   void _savePain() async {
     Provider.of<AccessibilityService>(context, listen: false)
       .speak("Salvando avaliação de dor.");
@@ -100,6 +101,7 @@ class _PainEvalScreenState extends State<PainEvalScreen> {
     setState(() => _isSaving = true);
 
     try {
+      //Chamada da API para adicionar o registro de dor.
       final res = await _apiService.addPain(
         UserSession.userId!,
         _painScore.toInt(),

@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
+    ChangeNotifierProvider( //O aplicativo é envolto em um ChangeNotifierProvider para que o AccessibilityService esteja disponível em toda a árvore de widgets.
       create: (context) => AccessibilityService(),
       child: CuidaDorApp(),
     ),
@@ -26,23 +26,24 @@ class CuidaDorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AccessibilityService>(
       builder: (context, accessService, child) {
+        //Lógica de Acessibilidade
         final double fontScale = accessService.fontPref ? 1.2 : 1.0;
         final bool contrast = accessService.contrastPref;
-
+        //Cores Padrão (Tema Escuro Primário)
         final Color normalBackground = Color(0xFF0F1E3A); 
         final Color normalText = Color(0xFFE0E0E0); 
         final Color normalAccent = Color(0xFF4DD0E1); 
         final Color normalCard = Color(0xFF1B2E50); 
-
+        //Cores de Alto Contraste (Foco na legibilidade)
         final Color highContrastBackground = Color(0xFF121212); 
         final Color highContrastText = Color.fromARGB(255, 255, 255, 255); 
         final Color highContrastAccent = Color(0xFF00C2FF); 
-        
+        //Seleção Dinâmica das Cores
         final Color primaryTextColor = contrast ? highContrastText : normalText;
         final Color primaryBackgroundColor = contrast ? highContrastBackground : normalBackground;
         final Color accentColor = contrast ? highContrastAccent : normalAccent;
         final Color cardColor = contrast ? Color(0xFF2E2E2E) : normalCard;
-
+        //Definição do Tema
         final theme = ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: primaryBackgroundColor, 
@@ -57,21 +58,21 @@ class CuidaDorApp extends StatelessWidget {
           ),
 
           fontFamily: 'Roboto', 
-          textTheme: TextTheme(
+          textTheme: TextTheme( //TextTheme ajusta o tamanho da fonte com base em fontScale
             bodyLarge: TextStyle(color: primaryTextColor, fontSize: 16 * fontScale),
             bodyMedium: TextStyle(color: primaryTextColor, fontSize: 14 * fontScale),
             titleLarge: TextStyle(color: primaryTextColor, fontSize: 24 * fontScale, fontWeight: FontWeight.bold),
             titleMedium: TextStyle(color: primaryTextColor, fontSize: 18 * fontScale, fontWeight: FontWeight.w600),
             labelLarge: TextStyle(color: primaryBackgroundColor, fontSize: 16 * fontScale, fontWeight: FontWeight.bold), 
           ),
-
+          //Estilo para a Barra de Aplicativo (AppBar)
           appBarTheme: AppBarTheme(
             backgroundColor: primaryBackgroundColor,
             elevation: 0,
             titleTextStyle: TextStyle(color: primaryTextColor, fontSize: 20 * fontScale, fontWeight: FontWeight.w500),
             iconTheme: IconThemeData(color: primaryTextColor),
           ),
-          
+          //Estilo para Campos de Formulário (InputDecoration)
           inputDecorationTheme: InputDecorationTheme(
             labelStyle: TextStyle(color: primaryTextColor.withOpacity(0.7), fontSize: 14 * fontScale),
             hintStyle: TextStyle(color: primaryTextColor.withOpacity(0.4)),
@@ -91,7 +92,7 @@ class CuidaDorApp extends StatelessWidget {
               borderSide: BorderSide(color: cardColor, width: 1.0), 
             ),
           ),
-          
+          //Estilo para Botões Elevados
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: accentColor, 
@@ -103,7 +104,7 @@ class CuidaDorApp extends StatelessWidget {
               elevation: 4,
             ),
           ),
-
+          //Estilo para Cards
           cardTheme: CardThemeData( 
             color: cardColor,
             elevation: 4,
@@ -111,11 +112,11 @@ class CuidaDorApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(16.0), 
             ),
           ),
-
+          //Estilo de Ícones
           iconTheme: IconThemeData(
             color: accentColor, 
           ),
-          
+          //Estilo para Checkboxes
           checkboxTheme: CheckboxThemeData(
             fillColor: MaterialStateProperty.resolveWith((states) {
               if (states.contains(MaterialState.selected)) {
@@ -128,14 +129,14 @@ class CuidaDorApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4.0),
             ),
           ),
-
+          //Estilo para Seleção de Texto
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: accentColor,
             selectionColor: accentColor.withOpacity(0.3),
             selectionHandleColor: accentColor,
           ),
         );
-
+        //Configuração do MaterialApp e Rotas
         return MaterialApp(
           title: 'CuidaDor',
           theme: theme, 

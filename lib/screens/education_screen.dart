@@ -4,6 +4,7 @@ import '../services/accessibility_service.dart';
 import '../widgets/custom_dialog.dart';
 
 class EducationScreen extends StatelessWidget {
+  //Mapa que armazena o título do tópico (chave) e o conteúdo formatado em Markdown simples (valor).
   final Map<String, String> _educationContent = {
     'O que é Osteoartrite': '''
 **ENTENDENDO SUA CONDIÇÃO**
@@ -201,7 +202,7 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
         spans.add(const TextSpan(text: '\n'));
         continue;
       }
-
+      //Identifica e formata texto entre ** (Negrito/Título).
       if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         spans.add(TextSpan(
           text: trimmed.substring(2, trimmed.length - 2) + '\n\n',
@@ -209,7 +210,7 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
         ));
         continue;
       }
-
+      //Identifica e formata texto entre * (Itálico).
       if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
         spans.add(TextSpan(
           text: trimmed.substring(1, trimmed.length - 1) + '\n\n',
@@ -217,7 +218,7 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
         ));
         continue;
       }
-
+      //Identifica e formata itens de lista começando com -.
       final bool isListItem = trimmed.startsWith('-');
 
       if (isListItem) {
@@ -225,7 +226,7 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
         spans.add(TextSpan(text: '- $text\n', style: base));
         continue;
       }
-
+      // Adiciona linhas de texto normal.
       spans.add(TextSpan(text: trimmed + '\n', style: base));
     }
 
@@ -239,9 +240,10 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
     showContentDialog(
       context: context,
       title: title,
+      //Cria a narração inicial limpando as marcas de formatação (**, *).
       initialNarration:
           "Abrindo conteúdo: $title. ${content.replaceAll('\n', ' ').replaceAll('**','').replaceAll('*','')}",
-      content: RichText(
+      content: RichText( //Passa o conteúdo formatado como um RichText.
         text: TextSpan(children: _buildTextSpans(content, context)),
       ),
     );
@@ -285,6 +287,7 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
   @override
   Widget build(BuildContext context) {
     final access = Provider.of<AccessibilityService>(context, listen: false);
+    //Acessibilidade: Garante que a narração inicial ocorra após a tela ser construída.
     Future.microtask(() =>
         access.speak("Tela de educação. Selecione um tema para aprender mais."));
 

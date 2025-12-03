@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({Key? key}) : super(key: key);
-
+  //Widget auxiliar para construir cada item da lista (ListTile).
   Widget _item(BuildContext context, String text, String route, {IconData? icon}) {
     return ListTile(
       leading: icon != null ? Icon(icon, color: Colors.white) : null,
@@ -15,7 +15,7 @@ class AppDrawer extends StatelessWidget {
       },
     );
   }
-
+  //Design principal.
   @override
   Widget build(BuildContext context) {
     return Drawer(

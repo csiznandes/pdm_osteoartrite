@@ -12,19 +12,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    //Garante que a lógica inicial seja executada após a construção do primeiro frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData(context);
     });
   }
-
+  //Lógica para carregar dados iniciais (principalmente preferências de acessibilidade).
   void _loadInitialData(BuildContext context) {
+    //Obtém o serviço de acessibilidade sem escutar mudanças.
     final accessService = Provider.of<AccessibilityService>(context, listen: false);
-
+    //Carrega as preferências de acessibilidade do usuário armazenadas na API.
     accessService.loadPreferencesFromApi();
-
+    //Acessibilidade: Anuncia a tela inicial para o usuário.
     accessService.speak("Tela inicial. Escolha uma opção no menu.");
   }
-
+  
   @override
   Widget build(BuildContext context) {
     
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 24),
+            //Botões de navegação principais
             _buildHomeButton(context, 'Perfil', '/profile', Icons.person),
             _buildHomeButton(context, 'Avaliação da Dor', '/pain', Icons.healing),
             _buildHomeButton(context, 'Técnicas de Alívio', '/techniques', Icons.self_improvement),

@@ -18,7 +18,7 @@ class _TechniquesScreenState extends State<TechniquesScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {  //Executa após a tela ser construída
       _access = Provider.of<AccessibilityService>(context, listen: false);
       _access.speak("Tela de técnicas de relaxamento e controle da dor.");
     });
@@ -26,10 +26,23 @@ class _TechniquesScreenState extends State<TechniquesScreen> {
 
   @override
   void dispose() {
-    _access.stopSpeaking();
+    _access.stopSpeaking(); //Para a narração ao sair da tela
     super.dispose();
   }
+  //Mapa que demonstrará o áudio guiado
+  final Map<String, String> _guidedAudio = {
+    'Relaxamento muscular': """
+  Vamos começar o relaxamento muscular progressivo.
+  Deite-se confortavelmente. Feche os olhos.
+  Comece pelos pés. Contraia os músculos por cinco segundos.
+  Agora relaxe completamente... Respire fundo.
+  Siga para as panturrilhas. Contraia por cinco segundos... e solte devagar.
+  Continue subindo pelo corpo: coxas... barriga... mãos... braços... ombros... rosto.
+  Tome seu tempo e mantenha a respiração lenta.
+  """,
+  };
 
+  //Mapa contendo o nome de cada técnica e seu conteúdo
   final Map<String, String> _techniqueContent = {
     'Alongamentos guiados': """
 **TÉCNICA: Alongamento de Mãos.**
@@ -119,6 +132,7 @@ BENEFÍCIO: Conforto imediato.
 """,
   };
 
+//Constrói TextSpan para estilizar o conteúdo (negrito, itálico, listas, etc.)
   List<TextSpan> _buildTextSpans(String content) {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
@@ -128,16 +142,26 @@ BENEFÍCIO: Conforto imediato.
     final italicStyle = baseStyle.copyWith(fontStyle: FontStyle.italic);
 
     for (final line in lines) {
+      //Negrito
       if (line.startsWith('**') && line.endsWith('**')) {
         spans.add(TextSpan(text: '${line.substring(2, line.length - 2)}\n', style: boldStyle));
+
+      //Itálico
       } else if (line.startsWith('*') && line.endsWith('*')) {
         spans.add(TextSpan(text: '${line.substring(1, line.length - 1)}\n', style: italicStyle));
+
+      //Listas
       } else if (line.startsWith('-')) {
         spans.add(TextSpan(text: '• ${line.substring(1)}\n', style: baseStyle));
+
+      //Linha vazia acaba pulando linha
       } else if (line.trim().isEmpty) {
         spans.add(const TextSpan(text: '\n'));
+
+      //Ignora links como [Vídeo demonstrativo]
       } else if (line.startsWith('[') && line.endsWith(']')) {
         continue;
+
       } else {
         spans.add(TextSpan(text: '$line\n', style: baseStyle));
       }
@@ -145,6 +169,7 @@ BENEFÍCIO: Conforto imediato.
     return spans;
   }
 
+  //Mostra o diálogo com a técnica selecionada
   void _showTechniqueDialog(String title, String content) {
     final access = Provider.of<AccessibilityService>(context, listen: false);
 
@@ -152,76 +177,78 @@ BENEFÍCIO: Conforto imediato.
       context: context,
       title: title,
       initialNarration: "Técnica: $title. ${content.replaceAll('\n', ' ').replaceAll('**', '').replaceAll('*', '')}",
+
+      //Conteúdo visual dentro do diálogo
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          RichText(
-            text: TextSpan(children: _buildTextSpans(content)),
-          ),
+          RichText(text: TextSpan(children: _buildTextSpans(content))),
           const SizedBox(height: 24),
+
+          //Botão de vídeo (se o texto contiver a tag)
           if (content.contains('[Vídeo demonstrativo]'))
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.play_circle_fill, color: Colors.black),
-                label: const Text('Ver Vídeo', style: TextStyle(color: Colors.black)),
-                onPressed: () {
-                  access.stopSpeaking();
-                  Navigator.push(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.play_circle_fill, color: Colors.black),
+              label: const Text('Ver Vídeo'),
+              onPressed: () {
+                access.stopSpeaking();
+                Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => VideoScreen(videoId: "GTgdBsBSfT8"),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              ),
+                      builder: (_) => const VideoScreen(videoId: "GTgdBsBSfT8"),
+                    ));
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
             ),
+
+          //Botão de áudio (ainda não implementado)
           if (content.contains('[Áudio guiado disponível]'))
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.audiotrack, color: Colors.black),
-                label: const Text('Ouvir Áudio Guiado', style: TextStyle(color: Colors.black)),
-                onPressed: () => access.speak("Botão para áudio guiado. Funcionalidade ainda não implementada."),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.audiotrack, color: Colors.black),
+              label: const Text('Ouvir Áudio Guiado'),
+              onPressed: () {
+                access.stopSpeaking();
+                final audioText = _guidedAudio[title];
+
+                if (audioText != null) {
+                  access.speak(audioText);
+                } else {
+                  access.speak("Áudio guiado não disponível para esta técnica.");
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
             ),
+
+          //Botão de lembrete diário
           if (content.contains('[Lembrete diário]'))
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.calendar_month, color: Colors.black),
-                label: const Text('Adicionar Lembrete', style: TextStyle(color: Colors.black)),
-                onPressed: () {
-                  access.stopSpeaking();
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/agenda');
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.calendar_month, color: Colors.black),
+              label: const Text('Adicionar Lembrete'),
+              onPressed: () {
+                access.stopSpeaking();
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/agenda');
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
             ),
         ],
       ),
     );
   }
 
+  //Busca alertas de segurança na API
   void _showAlertsDialog() async {
     final access = Provider.of<AccessibilityService>(context, listen: false);
     try {
-      final alerts = await _apiService.getAlerts();
+      final alerts = await _apiService.getAlerts(); //Chamada à API
       showContentDialog(
         context: context,
         title: '⚠️ Alertas de Segurança',
-        initialNarration: "Abrindo alertas de segurança. ${alerts.join(". ")}",
+        initialNarration: "Abrindo alertas. ${alerts.join(". ")}",
         content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: alerts.map<Widget>((alert) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text("● $alert", style: Theme.of(context).textTheme.bodyMedium),
-          )).toList(),
+          children: alerts
+              .map((alert) => Text("● $alert"))
+              .toList(),
         ),
       );
     } catch (e) {
@@ -232,18 +259,13 @@ BENEFÍCIO: Conforto imediato.
     }
   }
 
+  //Constrói cada botão de técnica
   Widget _buildTechniqueButton(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: ElevatedButton.icon(
-        icon: Icon(Icons.fitness_center, color: Theme.of(context).elevatedButtonTheme.style?.foregroundColor?.resolve({})),
-        label: Text(title, style: TextStyle(color: Theme.of(context).elevatedButtonTheme.style?.foregroundColor?.resolve({}), fontSize: 16)),
-        onPressed: () => _showTechniqueDialog(title, _techniqueContent[title] ?? 'Conteúdo não encontrado.'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).elevatedButtonTheme.style?.backgroundColor?.resolve({}),
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        ),
-      ),
+    return ElevatedButton.icon(
+      icon: Icon(Icons.fitness_center),
+      label: Text(title),
+      onPressed: () => _showTechniqueDialog(title, _techniqueContent[title] ?? 'Conteúdo não encontrado.'),
+      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20)),
     );
   }
 
@@ -251,30 +273,35 @@ BENEFÍCIO: Conforto imediato.
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text('Técnicas de Alívio'),
         leading: BackButton(onPressed: () {
           Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
-          Navigator.of(context).pop();
+          Navigator.pop(context);
         }),
-        title: const Text('Técnicas de Alívio'),
         actions: [
           IconButton(
             icon: const Icon(Icons.warning, color: Colors.amber),
-            onPressed: _showAlertsDialog,
+            onPressed: _showAlertsDialog,                   //Abre os alertas de segurança
           ),
         ],
       ),
+
       body: WillPopScope(
+        //Garante que a narração pare ao voltar
         onWillPop: () async {
           Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
           return true;
         },
+
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text('Escolha uma técnica para alívio:', style: Theme.of(context).textTheme.titleMedium),
+            children: [
+              Text('Escolha uma técnica para alívio:'),
               const SizedBox(height: 16),
+
+              //Botões das técnicas
               _buildTechniqueButton('Alongamentos guiados'),
               _buildTechniqueButton('Respiração profunda'),
               _buildTechniqueButton('Respiração 4-7-8'),

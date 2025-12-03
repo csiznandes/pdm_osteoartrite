@@ -14,10 +14,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
-
+  //Função assíncrona responsável por realizar a autenticação.
   void _login() async {
     setState(() {
       _isLoading = true;
+      //Acessibilidade: Anuncia que o login está sendo processado.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final access = Provider.of<AccessibilityService>(context, listen: false);
         access.speak("Tela de Login.");
@@ -25,11 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      //Chama o método de login na API Service.
       final res = await _apiService.login(
         _emailController.text,
         _passwordController.text,
       );
-
+      //Verifica a resposta da API.
       if (res['message'] == 'ok') {
         UserSession.userId = res['user_id'];
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
@@ -48,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
-
+  //Design da tela
   @override
   Widget build(BuildContext context) {
     final access = Provider.of<AccessibilityService>(context, listen: false);

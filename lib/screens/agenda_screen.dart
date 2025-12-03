@@ -22,13 +22,13 @@ class _AgendaScreenState extends State<AgendaScreen> {
   void initState() {
     super.initState();
     _loadAgenda();
-
+    //Acessibilidade: Anuncia a tela após o primeiro frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final access = Provider.of<AccessibilityService>(context, listen: false);
       access.speak("Tela de Agenda. Adicione lembretes de exercícios e visualize seus compromissos.");
     });
   }
-
+  //Função para carregar a lista de lembretes do usuário na API.
   Future<void> _loadAgenda() async {
     if (UserSession.userId != null) {
       setState(() {
@@ -36,7 +36,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       });
     }
   }
-
+  //Abre o seletor de data e atualiza o estado.
   Future<void> _selectDate(BuildContext context) async {
     final access = Provider.of<AccessibilityService>(context, listen: false);
     access.speak("Selecionar data");
@@ -65,7 +65,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       access.speak("Data selecionada: ${DateFormat('dd/MM/yyyy').format(picked)}");
     }
   }
-
+  //Abre o seletor de hora e atualiza o estado.
   Future<void> _selectTime(BuildContext context) async {
     final access = Provider.of<AccessibilityService>(context, listen: false);
     access.speak("Selecionar horário");
@@ -92,10 +92,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
       access.speak("Horário selecionado: ${picked.hour}:${picked.minute.toString().padLeft(2, '0')}");
     }
   }
-
+  //Envia o novo lembrete para a API.
   void _addAgendaItem() async {
     final access = Provider.of<AccessibilityService>(context, listen: false);
-
+    //Validação: verifica se todos os campos estão preenchidos.
     if (_selectedDate == null || _selectedTime == null || _descriptionController.text.isEmpty || UserSession.userId == null) {
       access.speak("Preencha data, hora e descrição.");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,7 +140,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       setState(() => _isAdding = false);
     }
   }
-
+  //Envia a requisição para deletar um item específico da agenda.
   void _deleteAgendaItem(int itemId) async {
     final access = Provider.of<AccessibilityService>(context, listen: false);
 

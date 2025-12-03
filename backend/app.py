@@ -7,16 +7,16 @@ import json
 import os
 
 app = Flask(__name__)
-
+#Configuração do Banco de Dados
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL",
     "sqlite:///database.db"
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-CORS(app)
+CORS(app)   #Habilita CORS para permitir que o frontend Flutter se conecte
 db = SQLAlchemy(app)
-
+#Modelos do Banco de Dados
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -51,12 +51,12 @@ class Feedback(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     text = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+#Cria as tabelas do banco de dados se não existirem
 with app.app_context():
     db.create_all()
 
 import re
-
+#Funções de Validação
 def is_valid_email(email):
     return re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email)
 
@@ -93,7 +93,7 @@ def validate_register(data):
         errors.append("É obrigatório aceitar o consentimento LGPD")
 
     return errors
-
+#Endpoints de Autenticação e Usuário
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
@@ -161,7 +161,7 @@ def update_user(user_id):
     user.contact = data.get("contact", user.contact)
     user.diagnosis = data.get("diagnosis", user.diagnosis)
     user.comorbidities = data.get("comorbidities", user.comorbidities)
-
+    #Atualiza a senha se um novo valor for fornecido
     if "password" in data and data["password"]:
         if len(data["password"]) < 6:
             return jsonify({"error": "Senha deve ter pelo menos 6 caracteres"}), 400 
@@ -175,7 +175,7 @@ def update_user(user_id):
 
     db.session.commit()
     return jsonify({"message": "Perfil atualizado"})
-
+#Endpoints de Dados
 @app.route("/user/<int:user_id>/pain", methods=["POST"])
 def add_pain(user_id):
     data = request.json
@@ -262,7 +262,7 @@ def del_feedback(user_id, fb_id):
     db.session.delete(f)
     db.session.commit()
     return jsonify({"message":"Apagado"})
-
+#Endpoints de Conteúdo Estático
 @app.route("/techniques", methods=["GET"])
 def techniques():
     return jsonify({
@@ -304,7 +304,7 @@ def reset_password():
 
     import string
     import random
-    
+    #Gera uma senha temporária aleatória de 10 caracteres
     temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10)) 
 
     user.password_hash = generate_password_hash(temp_password)

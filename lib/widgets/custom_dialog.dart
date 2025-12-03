@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
-
+//Exibe um diálogo modal com título e conteúdo, integrado com o serviço de acessibilidade.
 void showContentDialog({
   required BuildContext context,
   required String title,
@@ -9,7 +9,7 @@ void showContentDialog({
   String? initialNarration,
 }) {
   final access = Provider.of<AccessibilityService>(context, listen: false);
-
+  //Garante que qualquer narração anterior seja interrompida antes de abrir o novo diálogo.
   access.stopSpeaking();
   
   if (initialNarration != null) {
