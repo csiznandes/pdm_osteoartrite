@@ -10,6 +10,8 @@ void showContentDialog({
 }) {
   final access = Provider.of<AccessibilityService>(context, listen: false);
 
+  access.stopSpeaking();
+  
   if (initialNarration != null) {
     access.speak(initialNarration);
   }

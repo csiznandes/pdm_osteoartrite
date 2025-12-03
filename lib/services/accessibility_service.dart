@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../utils/user_session.dart';
 
@@ -53,6 +52,7 @@ class AccessibilityService with ChangeNotifier {
 
   Future<void> speak(String text) async {
     if (_voiceReadPref) {
+      await flutterTts.stop();
       await flutterTts.speak(text);
     }
   }

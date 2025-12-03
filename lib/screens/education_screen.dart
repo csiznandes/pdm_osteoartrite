@@ -28,12 +28,12 @@ O que acontece? A osteoartrite (ou artrose) é o desgaste natural da cartilagem 
 **RECONHECENDO OS SINAIS**
 
 **Sintomas principais:**
-✓ Dor nas articulações (piora com movimento)
-✓ Rigidez pela manhã (melhora em 30 min)
-✓ Inchaço leve nas juntas
-✓ Estalos ao movimentar
-✓ Dificuldade para realizar tarefas simples
-✓ Sensação de "travamento"
+- Dor nas articulações (piora com movimento)
+- Rigidez pela manhã (melhora em 30 min)
+- Inchaço leve nas juntas
+- Estalos ao movimentar
+- Dificuldade para realizar tarefas simples
+- Sensação de "travamento"
 
 **Padrão comum:**
 - Manhã: mais rígido
@@ -59,11 +59,11 @@ O que acontece? A osteoartrite (ou artrose) é o desgaste natural da cartilagem 
 - Postura inadequada
 
 **FATORES QUE VOCÊ PODE CONTROLAR:**
-Peso corporal
-Atividade física regular
-Postura no dia a dia
-Proteção das articulações
-Alimentação saudável
+- Peso corporal
+- Atividade física regular
+- Posição no dia a dia
+- Proteção das articulações
+- Alimentação saudável
 ''',
     'Tratamento e Autocuidados': '''
 **OPÇÕES DE TRATAMENTO**
@@ -73,9 +73,9 @@ A) **MEDICAMENTOS:**
 - Analgésicos
 - Anti-inflamatórios (com orientação médica)
 - Pomadas e géis
-- Suplementos.
+- Suplementos
 
-B) **PRÁTICAS INTEGRATIVAS (PICs):** ✨ *Este app foca nestas práticas!*
+B) **PRÁTICAS INTEGRATIVAS (PICs):**
 - Exercícios adaptados
 - Termoterapia
 - Acupuntura/Acupressão
@@ -105,21 +105,21 @@ E) **TRATAMENTOS AVANÇADOS:**
 **COMENDO PARA ALIVIAR**
 
 **Alimentos AMIGOS (anti-inflamatórios):**
-🐟 Peixes (salmão, sardinha) - ômega 3
-🫒 Azeite de oliva extra virgem
-🥬 Vegetais verde-escuros
-🍓 Frutas vermelhas
-🧄 Alho e cebola
-🫚 Gengibre e cúrcuma
-🌰 Castanhas e nozes
-🍊 Frutas cítricas (vitamina C)
+- Peixes (salmão, sardinha) - ômega 3
+- Azeite de oliva extra virgem
+- Vegetais verde-escuros
+- Frutas vermelhas
+- Alho e cebola
+- Gengibre e cúrcuma
+- Castanhas e nozes
+- Frutas cítricas (vitamina C)
 
 **Alimentos a EVITAR ou REDUZIR:**
-❌ Açúcar em excesso
-❌ Frituras
-❌ Carnes processadas
-❌ Bebidas alcoólicas em excesso
-❌ Sal em excesso
+- Açúcar em excesso
+- Frituras
+- Carnes processadas
+- Bebidas alcoólicas em excesso
+- Sal em excesso
 
 **HIDRATAÇÃO:** Beba 6-8 copos de água por dia. *A cartilagem precisa de água!*
 
@@ -137,104 +137,145 @@ E) **TRATAMENTOS AVANÇADOS:**
 **Na cozinha:**
 - Use utensílios com cabos grossos
 - Abridores automáticos
-- Banqueta.
+- Banqueta
 
 **No banheiro:**
 - Barras de apoio
 - Tapete antiderrapante
-- Banco para sentar no banho.
+- Banco para sentar no banho
 
 **Calçados:**
 - Prefira solado antiderrapante
 - Salto baixo (2-3 cm)
-- Amortecimento.
+- Amortecimento
 
 **Movimentação:**
 - Use bengala se necessário
 - Levante-se devagar
-- Evite ficar muito tempo na mesma posição.
+- Evite ficar muito tempo na mesma posição
 
 **Proteção articular:**
 - Carregue peso perto do corpo
-- Use as duas mãos para tarefas pesadas.
+- Use as duas mãos para tarefas pesadas
 
 **CUIDANDO DA MENTE**
 É normal sentir: Frustração, Medo, Tristeza, Ansiedade. **VOCÊ NÃO ESTÁ SOZINHO!**
 
 **Estratégias de enfrentamento:**
-- Foque no que VOCÊ PODE fazer
+- Foque no que você pode fazer
 - Celebre pequenas vitórias
 - Mantenha hobbies
-- Peça ajuda.
+- Peça ajuda
 
 **Busque ajuda se sentir:**
 - Tristeza constante
 - Perda de interesse
-- Isolamento social.
+- Isolamento social  
 *Psicólogo pode ajudar muito!*
 
 **QUALIDADE DE VIDA**
 
 **Princípios:**
-- MOVIMENTO é remédio
-- EQUILÍBRIO
-- ATITUDE positiva
-- APOIO social
-- APRENDIZADO.
+- Movimento é remédio
+- Equilíbrio
+- Atitude positiva
+- Apoio social
+- Aprendizado
 
 Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
 ''',
   };
 
-  // Função auxiliar para criar a lista de TextSpan a partir do conteúdo em string
   List<TextSpan> _buildTextSpans(String content, BuildContext context) {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
 
-    final baseStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16);
-    final boldStyle = baseStyle?.copyWith(fontWeight: FontWeight.bold, fontSize: 18);
-    final italicStyle = baseStyle?.copyWith(fontStyle: FontStyle.italic);
+    final base = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16);
+    final bold = base?.copyWith(fontWeight: FontWeight.bold, fontSize: 18);
+    final italic = base?.copyWith(fontStyle: FontStyle.italic);
 
     for (final line in lines) {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        spans.add(TextSpan(text: '${line.substring(2, line.length - 2)}\n\n', style: boldStyle));
-      } else if (line.startsWith('*') && line.endsWith('*')) {
-        spans.add(TextSpan(text: '${line.substring(1, line.length - 1)}\n\n', style: italicStyle));
-      } else if (line.startsWith('-') || line.startsWith('✓') || line.startsWith('✅') || line.startsWith('❌') || line.startsWith('🐟') || line.startsWith('🫒') || line.startsWith('🥬') || line.startsWith('🍓') || line.startsWith('🧄') || line.startsWith('🫚') || line.startsWith('🌰') || line.startsWith('🍊')) {
-        final marker = line.substring(0, 1);
-        final text = line.substring(1).trim();
-        spans.add(TextSpan(text: '$marker $text\n', style: baseStyle));
-      } else if (line.trim().isEmpty) {
+      final trimmed = line.trim();
+
+      if (trimmed.isEmpty) {
         spans.add(const TextSpan(text: '\n'));
-      } else {
-        spans.add(TextSpan(text: '$line\n', style: baseStyle));
+        continue;
       }
+
+      if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+        spans.add(TextSpan(
+          text: trimmed.substring(2, trimmed.length - 2) + '\n\n',
+          style: bold,
+        ));
+        continue;
+      }
+
+      if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
+        spans.add(TextSpan(
+          text: trimmed.substring(1, trimmed.length - 1) + '\n\n',
+          style: italic,
+        ));
+        continue;
+      }
+
+      final bool isListItem = trimmed.startsWith('-');
+
+      if (isListItem) {
+        final text = trimmed.substring(1).trim();
+        spans.add(TextSpan(text: '- $text\n', style: base));
+        continue;
+      }
+
+      spans.add(TextSpan(text: trimmed + '\n', style: base));
     }
+
     return spans;
   }
 
   void _showEducationDialog(BuildContext context, String title, String content) {
+    final access = Provider.of<AccessibilityService>(context, listen: false);
+    access.stopSpeaking();
+
     showContentDialog(
       context: context,
       title: title,
-      initialNarration: "Abrindo conteúdo: $title. ${content.replaceAll('\n', ' ').replaceAll('**', '').replaceAll('*', '')}",
+      initialNarration:
+          "Abrindo conteúdo: $title. ${content.replaceAll('\n', ' ').replaceAll('**','').replaceAll('*','')}",
       content: RichText(
-        text: TextSpan(
-          children: _buildTextSpans(content, context),
-        ),
+        text: TextSpan(children: _buildTextSpans(content, context)),
       ),
     );
   }
 
   Widget _buildEducationButton(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 12),
       child: ElevatedButton.icon(
-        icon: Icon(Icons.menu_book, color: Theme.of(context).elevatedButtonTheme.style?.foregroundColor?.resolve({})),
-        label: Text(title, style: TextStyle(color: Theme.of(context).elevatedButtonTheme.style?.foregroundColor?.resolve({}), fontSize: 16)),
-        onPressed: () => _showEducationDialog(context, title, _educationContent[title] ?? 'Conteúdo não encontrado.'),
+        icon: Icon(Icons.menu_book,
+            color: Theme.of(context)
+                .elevatedButtonTheme
+                .style
+                ?.foregroundColor
+                ?.resolve({})),
+        label: Text(
+          title,
+          style: TextStyle(
+            color: Theme.of(context)
+                .elevatedButtonTheme
+                .style
+                ?.foregroundColor
+                ?.resolve({}),
+            fontSize: 16,
+          ),
+        ),
+        onPressed: () =>
+            _showEducationDialog(context, title, _educationContent[title] ?? ''),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).elevatedButtonTheme.style?.backgroundColor?.resolve({}),
+          backgroundColor: Theme.of(context)
+              .elevatedButtonTheme
+              .style
+              ?.backgroundColor
+              ?.resolve({}),
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         ),
       ),
@@ -244,16 +285,20 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
   @override
   Widget build(BuildContext context) {
     final access = Provider.of<AccessibilityService>(context, listen: false);
-    Future.microtask(() => access.speak("Tela de educação. Selecione um tema para aprender mais."));
+    Future.microtask(() =>
+        access.speak("Tela de educação. Selecione um tema para aprender mais."));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Educação sobre Osteoartrite')),
+      appBar: AppBar(title: const Text('Educação sobre Osteoartrite')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Text('Selecione um tópico para aprender mais:', style: Theme.of(context).textTheme.titleMedium),
+          children: [
+            Text(
+              'Selecione um tópico para aprender mais:',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
             _buildEducationButton(context, 'O que é Osteoartrite'),
             _buildEducationButton(context, 'Sintomas e Sinais'),
@@ -263,14 +308,23 @@ Lembre-se: *"Osteoartrite é parte de você, mas NÃO define quem você é!"*
             const SizedBox(height: 24),
             OutlinedButton(
               onPressed: () {
-                 Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
-                 Navigator.pop(context);
+                Provider.of<AccessibilityService>(context, listen: false)
+                    .stopSpeaking();
+                Navigator.pop(context);
               },
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white),
+                side: BorderSide(
+                  color: Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.white,
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Text('Voltar', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
+              child: Text(
+                'Voltar',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
             ),
           ],
         ),

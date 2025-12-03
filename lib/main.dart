@@ -35,7 +35,7 @@ class CuidaDorApp extends StatelessWidget {
         final Color normalCard = Color(0xFF1B2E50); 
 
         final Color highContrastBackground = Color(0xFF121212); 
-        final Color highContrastText = Color(0xFFFFD93D); 
+        final Color highContrastText = Color.fromARGB(255, 255, 255, 255); 
         final Color highContrastAccent = Color(0xFF00C2FF); 
         
         final Color primaryTextColor = contrast ? highContrastText : normalText;
