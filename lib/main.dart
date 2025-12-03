@@ -27,49 +27,112 @@ class CuidaDorApp extends StatelessWidget {
     return Consumer<AccessibilityService>(
       builder: (context, accessService, child) {
         final double fontScale = accessService.fontPref ? 1.2 : 1.0;
-    
-        final Color primaryTextColor = accessService.contrastPref ? Colors.black : Colors.white;
-        final Color primaryBackgroundColor = accessService.contrastPref ? Colors.white : Colors.black;
-        final Color accentColor = accessService.contrastPref ? Colors.red.shade700 : Colors.red.shade700;
+        final bool contrast = accessService.contrastPref;
+
+        final Color normalBackground = Color(0xFF0F1E3A); 
+        final Color normalText = Color(0xFFE0E0E0); 
+        final Color normalAccent = Color(0xFF4DD0E1); 
+        final Color normalCard = Color(0xFF1B2E50); 
+
+        final Color highContrastBackground = Color(0xFF121212); 
+        final Color highContrastText = Color(0xFFFFD93D); 
+        final Color highContrastAccent = Color(0xFF00C2FF); 
         
+        final Color primaryTextColor = contrast ? highContrastText : normalText;
+        final Color primaryBackgroundColor = contrast ? highContrastBackground : normalBackground;
+        final Color accentColor = contrast ? highContrastAccent : normalAccent;
+        final Color cardColor = contrast ? Color(0xFF2E2E2E) : normalCard;
+
         final theme = ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: primaryBackgroundColor, 
           primaryColor: primaryBackgroundColor, 
-          
+          colorScheme: ColorScheme.dark(
+            primary: accentColor,
+            secondary: accentColor.withOpacity(0.8),
+            surface: cardColor,
+            background: primaryBackgroundColor,
+            onPrimary: primaryBackgroundColor, 
+            onSurface: primaryTextColor,
+          ),
+
+          fontFamily: 'Roboto', 
           textTheme: TextTheme(
             bodyLarge: TextStyle(color: primaryTextColor, fontSize: 16 * fontScale),
             bodyMedium: TextStyle(color: primaryTextColor, fontSize: 14 * fontScale),
-            titleMedium: TextStyle(color: primaryTextColor, fontSize: 18 * fontScale, fontWeight: FontWeight.bold),
-            labelLarge: TextStyle(color: primaryBackgroundColor),
+            titleLarge: TextStyle(color: primaryTextColor, fontSize: 24 * fontScale, fontWeight: FontWeight.bold),
+            titleMedium: TextStyle(color: primaryTextColor, fontSize: 18 * fontScale, fontWeight: FontWeight.w600),
+            labelLarge: TextStyle(color: primaryBackgroundColor, fontSize: 16 * fontScale, fontWeight: FontWeight.bold), 
           ),
 
           appBarTheme: AppBarTheme(
             backgroundColor: primaryBackgroundColor,
-            titleTextStyle: TextStyle(color: primaryTextColor, fontSize: 20 * fontScale),
+            elevation: 0,
+            titleTextStyle: TextStyle(color: primaryTextColor, fontSize: 20 * fontScale, fontWeight: FontWeight.w500),
+            iconTheme: IconThemeData(color: primaryTextColor),
           ),
           
           inputDecorationTheme: InputDecorationTheme(
-            labelStyle: TextStyle(color: primaryTextColor.withOpacity(0.7)),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryTextColor.withOpacity(0.5))),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: accentColor)),
+            labelStyle: TextStyle(color: primaryTextColor.withOpacity(0.7), fontSize: 14 * fontScale),
+            hintStyle: TextStyle(color: primaryTextColor.withOpacity(0.4)),
+            contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+            fillColor: cardColor,
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: accentColor, width: 2.0),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: cardColor, width: 1.0), 
+            ),
           ),
           
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryTextColor,
-              foregroundColor: primaryBackgroundColor,
+              backgroundColor: accentColor, 
+              foregroundColor: primaryBackgroundColor, 
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0), 
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              elevation: 4,
             ),
+          ),
+
+          cardTheme: CardThemeData( 
+            color: cardColor,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0), 
+            ),
+          ),
+
+          iconTheme: IconThemeData(
+            color: accentColor, 
           ),
           
           checkboxTheme: CheckboxThemeData(
             fillColor: MaterialStateProperty.resolveWith((states) {
               if (states.contains(MaterialState.selected)) {
-                return primaryTextColor; 
+                return accentColor;
               }
-              return Colors.white30; 
+              return primaryTextColor.withOpacity(0.2); 
             }),
-            checkColor: MaterialStateProperty.all(primaryBackgroundColor),
+            checkColor: MaterialStateProperty.all(contrast ? Colors.black : primaryBackgroundColor),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.0),
+            ),
+          ),
+
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: accentColor,
+            selectionColor: accentColor.withOpacity(0.3),
+            selectionHandleColor: accentColor,
           ),
         );
 

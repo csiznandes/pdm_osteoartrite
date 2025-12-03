@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: 150,
                 height: 150,
-                child: Image.asset('assets/corpo_icon.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/CuidaDor2.png', fit: BoxFit.cover),
               ),
               SizedBox(height: 24),
               Text(

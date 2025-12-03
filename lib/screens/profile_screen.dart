@@ -165,8 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Digite uma senha';
-                        if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
+                        //if (value == null || value.isEmpty) return 'Digite uma senha';
+                        if (value != null && value.isNotEmpty && value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
                         return null;
                       },
                       onTap: () => Provider.of<AccessibilityService>(context, listen: false)

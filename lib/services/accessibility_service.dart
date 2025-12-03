@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
+import '../utils/user_session.dart';
 
 class AccessibilityService with ChangeNotifier {
   bool _fontPref = false;
@@ -7,6 +10,8 @@ class AccessibilityService with ChangeNotifier {
   bool _voiceReadPref = false;
   
   final FlutterTts flutterTts = FlutterTts();
+
+  final ApiService _apiService = ApiService();
 
   bool get fontPref => _fontPref;
   bool get contrastPref => _contrastPref;
@@ -29,6 +34,7 @@ class AccessibilityService with ChangeNotifier {
     _voiceReadPref = voiceRead;
     notifyListeners();
   }
+  
 
   void toggleFontPref(bool value) {
     _fontPref = value;
@@ -54,10 +60,24 @@ class AccessibilityService with ChangeNotifier {
   Future<void> stopSpeaking() async {
     await flutterTts.stop();
   }
-  
-  @override
-  void dispose() {
-    flutterTts.stop();
-    super.dispose();
+
+  Future<void> loadPreferencesFromApi() async {
+    if (UserSession.userId == null) {
+      return;
+    }
+
+    try {
+      final data = await _apiService.getUser(UserSession.userId!);
+      final access = data['accessibility'] as Map<String, dynamic>? ?? {};
+
+      setPreferences(
+        font: access['font'] ?? false,
+        contrast: access['contrast'] ?? false,
+        voiceRead: access['voice_read'] ?? false,
+      );
+
+    } catch (e) {
+      print('Erro ao carregar preferências de acessibilidade: $e');
+    }
   }
 }

@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
 
-/// Exibe um diálogo de conteúdo padronizado que interrompe a narração de acessibilidade ao ser fechado.
-///
-/// [context]: O BuildContext da tela que está chamando.
-/// [title]: O título a ser exibido na barra de aplicativos do diálogo.
-/// [content]: O widget principal a ser exibido como conteúdo do diálogo.
-/// [initialNarration]: O texto a ser falado pela acessibilidade quando o diálogo é aberto.
 void showContentDialog({
   required BuildContext context,
   required String title,
@@ -16,7 +10,6 @@ void showContentDialog({
 }) {
   final access = Provider.of<AccessibilityService>(context, listen: false);
 
-  // Inicia a narração, se houver uma.
   if (initialNarration != null) {
     access.speak(initialNarration);
   }
@@ -24,12 +17,10 @@ void showContentDialog({
   showDialog(
     context: context,
     builder: (dialogContext) {
-      // Usa WillPopScope para interceptar o botão "voltar" do sistema.
       return WillPopScope(
         onWillPop: () async {
-          // Interrompe a narração quando o diálogo é dispensado.
           access.stopSpeaking();
-          return true; // Permite que o diálogo seja fechado.
+          return true;
         },
         child: AlertDialog(
           backgroundColor: Theme.of(dialogContext).scaffoldBackgroundColor,
@@ -42,7 +33,6 @@ void showContentDialog({
             actions: [
               IconButton(
                 icon: Icon(Icons.close, color: Theme.of(dialogContext).textTheme.bodyLarge?.color),
-                // Interrompe a narração quando o botão 'X' é pressionado.
                 onPressed: () {
                   access.stopSpeaking();
                   Navigator.pop(dialogContext);

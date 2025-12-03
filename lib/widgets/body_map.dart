@@ -32,7 +32,6 @@ class BodyMap extends StatelessWidget {
               ),
             ),
 
-            // Peito
             Positioned(
               top: height * 0.18,
               left: width * 0.32,

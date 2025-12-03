@@ -3,15 +3,31 @@ import '../widgets/app_drawer.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData(context);
+    });
+  }
+
+  void _loadInitialData(BuildContext context) {
+    final accessService = Provider.of<AccessibilityService>(context, listen: false);
+
+    accessService.loadPreferencesFromApi();
+
+    accessService.speak("Tela inicial. Escolha uma opção no menu.");
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    Future.microtask(() {
-      final access = Provider.of<AccessibilityService>(context, listen: false);
-      access.speak("Tela inicial. Escolha uma opção no menu.");
-    });
-
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Home - CuidaDor'),
@@ -43,7 +59,7 @@ class HomeScreen extends StatelessWidget {
             OutlinedButton(
               onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: const Color.fromARGB(255, 255, 0, 0)),
+                side: BorderSide(color: const Color.fromARGB(255, 255, 255, 255)),
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text('Sair', style: TextStyle(color: Colors.white)),
@@ -55,25 +71,27 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildHomeButton(BuildContext context, String text, String route, IconData icon) {
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.black),
-        label: Text(text, style: TextStyle(color: Colors.black, fontSize: 16)),
-        onPressed: () {
-          Provider.of<AccessibilityService>(context, listen: false)
-              .speak("Abrindo $text");
-          Navigator.pushNamed(context, route);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        padding: const EdgeInsets.only(bottom: 12.0),
+        child: ElevatedButton.icon(
+          icon: Icon(icon, color: Colors.black),
+          label: Text(text, style: TextStyle(color: Colors.black, fontSize: 16)),
+          onPressed: () {
+            Provider.of<AccessibilityService>(context, listen: false)
+                .speak("Abrindo $text");
+            Navigator.pushNamed(context, route);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          ),
         ),
-      ),
-    );
+      );
   }
-  
+
   void _showAlertsDialog(BuildContext context) {
+
     final access = Provider.of<AccessibilityService>(context, listen: false);
     access.speak("Abrindo alertas de segurança.");
     access.speak("Pare se sentir tontura intensa. Não force se tiver dor.");

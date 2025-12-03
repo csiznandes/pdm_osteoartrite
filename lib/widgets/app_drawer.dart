@@ -30,11 +30,10 @@ class AppDrawer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo
                     SizedBox(
                       width: 80,
                       height: 80,
-                      child: Image.asset('assets/corpo_icon.jpg', fit: BoxFit.cover),
+                      child: Image.asset('assets/CuidaDor2.png', fit: BoxFit.cover),
                     ),
                     SizedBox(height: 12),
                     Text('Menu', style: TextStyle(color: Colors.white, fontSize: 20)),

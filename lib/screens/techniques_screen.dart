@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
 import '../widgets/custom_dialog.dart';
+import '../screens/video_screen.dart';
 
 class TechniquesScreen extends StatefulWidget {
   @override
@@ -11,19 +12,21 @@ class TechniquesScreen extends StatefulWidget {
 
 class _TechniquesScreenState extends State<TechniquesScreen> {
   final ApiService _apiService = ApiService();
+  late AccessibilityService _access;
+
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final access = Provider.of<AccessibilityService>(context, listen: false);
-      access.speak("Tela de técnicas de relaxamento e controle da dor.");
+      _access = Provider.of<AccessibilityService>(context, listen: false);
+      _access.speak("Tela de técnicas de relaxamento e controle da dor.");
     });
   }
 
   @override
   void dispose() {
-    Provider.of<AccessibilityService>(context, listen: false).stopSpeaking();
+    _access.stopSpeaking();
     super.dispose();
   }
 
@@ -116,7 +119,6 @@ BENEFÍCIO: Conforto imediato.
 """,
   };
 
-  // Função auxiliar para criar a lista de TextSpan a partir do conteúdo em string
   List<TextSpan> _buildTextSpans(String content) {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
@@ -135,7 +137,7 @@ BENEFÍCIO: Conforto imediato.
       } else if (line.trim().isEmpty) {
         spans.add(const TextSpan(text: '\n'));
       } else if (line.startsWith('[') && line.endsWith(']')) {
-        continue; // Ignora as linhas de placeholder para botões
+        continue;
       } else {
         spans.add(TextSpan(text: '$line\n', style: baseStyle));
       }
@@ -164,7 +166,15 @@ BENEFÍCIO: Conforto imediato.
               child: ElevatedButton.icon(
                 icon: Icon(Icons.play_circle_fill, color: Colors.black),
                 label: const Text('Ver Vídeo', style: TextStyle(color: Colors.black)),
-                onPressed: () => access.speak("Botão para vídeo demonstrativo. Funcionalidade ainda não implementada."),
+                onPressed: () {
+                  access.stopSpeaking();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => VideoScreen(videoId: "GTgdBsBSfT8"),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               ),
             ),

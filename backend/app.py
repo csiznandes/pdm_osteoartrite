@@ -162,6 +162,11 @@ def update_user(user_id):
     user.diagnosis = data.get("diagnosis", user.diagnosis)
     user.comorbidities = data.get("comorbidities", user.comorbidities)
 
+    if "password" in data and data["password"]:
+        if len(data["password"]) < 6:
+            return jsonify({"error": "Senha deve ter pelo menos 6 caracteres"}), 400 
+        user.password_hash = generate_password_hash(data["password"])
+
     if "accessibility" in data:
         user.accessibility = json.dumps(data["accessibility"])
 
@@ -294,19 +299,22 @@ def reset_password():
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({"error": "Email não encontrado"}), 404
+        print(f"Tentativa de redefinição de senha para email não cadastrado: {email}")
+        return jsonify({"message": "Email de redefinição enviado (se a conta existir)"}), 200
 
-    temp_password = "123456" 
+    import string
+    import random
+    
+    temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10)) 
 
     user.password_hash = generate_password_hash(temp_password)
     db.session.commit()
 
-    print(f"Senha temporária definida para {email}: {temp_password}")
+    print(f"ATENÇÃO: Senha temporária definida para {email}: {temp_password}. Usuário deve fazer login com esta senha.")
 
     return jsonify({
-        "message": "password_reset",
-        "temp_password": temp_password
-    })
+        "message": "password_reset_success"
+    }), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
