@@ -139,10 +139,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         final emailRegex = RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+$");
-
                         if (value == null || value.isEmpty) return 'Digite um email';
                         if (!emailRegex.hasMatch(value)) return 'Email inválido';
-
                         return null;
                       },
                       onTap: () => Provider.of<AccessibilityService>(context, listen: false)

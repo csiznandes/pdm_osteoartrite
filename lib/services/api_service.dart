@@ -85,6 +85,16 @@ class ApiService {
   Future deleteFeedback(int id, int fbId) async {
     await http.delete(Uri.parse('$baseUrl/user/$id/feedback/$fbId'));
   }
+
+  Future<List<dynamic>> getAllUsers() async {
+    final res = await http.get(Uri.parse('$baseUrl/users'));
+    if(res.statusCode == 200) {
+      return jsonDecode(res.body);
+    } else {
+      print('Erro ao buscar todos os usuários: ${res.statusCode}');
+      return [];
+    }
+  }
   //Obtém o conteúdo sobre técnicas de alívio.
   Future<Map<String, dynamic>> getTechniques() async {
     final res = await http.get(Uri.parse('$baseUrl/techniques'));
@@ -110,4 +120,16 @@ class ApiService {
 
     return jsonDecode(res.body);
   }
+
+  //Lista todos os usuários (para o administrador)
+  Future<List<dynamic>> getUsers() async {
+    final res = await http.get(Uri.parse('$baseUrl/users')); 
+    
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    } else {
+      throw Exception('Falha ao carregar usuários: ${res.statusCode}');
+    }
+  }
+
 }

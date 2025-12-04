@@ -9,6 +9,7 @@ import 'screens/education_screen.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/reset_password_screen.dart';
+import 'screens/admin_reports_screen.dart';
 import 'services/accessibility_service.dart';
 import 'package:provider/provider.dart';
 
@@ -153,6 +154,7 @@ class CuidaDorApp extends StatelessWidget {
             '/agenda': (_) => AgendaScreen(),
             '/reports': (_) => ReportsScreen(),
             '/reset-password': (context) => ResetPasswordScreen(),
+            '/admin-reports': (context) => AdminReportsScreen(),
           },
         );
       },

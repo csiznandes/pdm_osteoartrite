@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
 import 'package:provider/provider.dart';
 import '../services/accessibility_service.dart';
+import '../utils/user_session.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -29,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   @override
   Widget build(BuildContext context) {
-    
+    final bool isAdmin = UserSession.isAdmin;
     return Scaffold(
       appBar: AppBar(
         title: Text('Home - CuidaDor'),
@@ -57,10 +58,18 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildHomeButton(context, 'Técnicas de Alívio', '/techniques', Icons.self_improvement),
             _buildHomeButton(context, 'Educação', '/education', Icons.menu_book),
             _buildHomeButton(context, 'Agenda e Lembretes', '/agenda', Icons.calendar_today),
-            _buildHomeButton(context, 'Relatórios e Feedbacks', '/reports', Icons.insert_chart),
+            if (!isAdmin)
+              _buildHomeButton(context, 'Relatórios e Feedbacks', '/reports', Icons.insert_chart),
+            
+            if(isAdmin)
+              _buildHomeButton(context, 'Relatórios de Usuários', '/admin-reports', Icons.insert_chart),
+
             SizedBox(height: 24),
             OutlinedButton(
-              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
+              onPressed: () {
+                UserSession.logout();
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              },
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: const Color.fromARGB(255, 255, 255, 255)),
                 padding: EdgeInsets.symmetric(vertical: 16),

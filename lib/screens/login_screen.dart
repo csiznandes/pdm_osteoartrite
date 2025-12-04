@@ -34,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
       //Verifica a resposta da API.
       if (res['message'] == 'ok') {
         UserSession.userId = res['user_id'];
+        UserSession.isAdmin = res['is_admin'] ?? false;
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

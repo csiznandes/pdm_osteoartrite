@@ -30,6 +30,7 @@ class User(db.Model):
     accessibility = db.Column(db.Text)
     lgpd_consent = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_admin = db.Column(db.Boolean, default=False)
 
 class PainEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -104,6 +105,11 @@ def register():
 
     if User.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "Email já cadastrado"}), 400
+    
+    is_admin = False
+    if User.query.count() == 0:
+        is_admin = True
+        print("Primeiro usuário registrado como Administrador.")
 
     user = User(
         email=data["email"],
@@ -115,7 +121,8 @@ def register():
         diagnosis=data.get("diagnosis"),
         comorbidities=data.get("comorbidities"),
         accessibility=json.dumps(data.get("accessibility", {})),
-        lgpd_consent=data.get("lgpd_consent")
+        lgpd_consent=data.get("lgpd_consent"),
+        is_admin=is_admin
     )
 
     db.session.add(user)
@@ -132,7 +139,7 @@ def login():
     if not user or not check_password_hash(user.password_hash, data.get("password","")):
         return jsonify({"error": "Credenciais inválidas"}), 401
 
-    return jsonify({"message": "ok", "user_id": user.id}), 200
+    return jsonify({"message": "ok", "user_id": user.id, "is_admin": user.is_admin}), 200
 
 @app.route("/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
@@ -147,7 +154,8 @@ def get_user(user_id):
         "diagnosis": user.diagnosis,
         "comorbidities": user.comorbidities,
         "accessibility": json.loads(user.accessibility or "{}"),
-        "lgpd_consent": user.lgpd_consent
+        "lgpd_consent": user.lgpd_consent,
+        "is_admin": user.is_admin
     })
 
 @app.route("/user/<int:user_id>", methods=["PUT"])
@@ -155,6 +163,14 @@ def update_user(user_id):
     user = User.query.get_or_404(user_id)
     data = request.json
 
+    new_email = data.get("email")
+    if new_email and new_email != user.email:
+        existing_user = User.query.filter_by(email=new_email).first()
+        
+        if existing_user and existing_user.id != user_id:
+            return jsonify({"error": "Email já está em uso por outro usuário."}), 400
+        
+        user.email = new_email
     user.name = data.get("name", user.name)
     user.age = data.get("age", user.age)
     user.sex = data.get("sex", user.sex)
@@ -175,6 +191,19 @@ def update_user(user_id):
 
     db.session.commit()
     return jsonify({"message": "Perfil atualizado"})
+#Lista todos os usuários
+@app.route("/users", methods=["GET"])
+def list_users():
+    users = User.query.all()
+    
+    return jsonify([
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "created_at": u.created_at.isoformat()
+        } for u in users
+    ])
 #Endpoints de Dados
 @app.route("/user/<int:user_id>/pain", methods=["POST"])
 def add_pain(user_id):
@@ -262,6 +291,36 @@ def del_feedback(user_id, fb_id):
     db.session.delete(f)
     db.session.commit()
     return jsonify({"message":"Apagado"})
+
+@app.route("/pain/all", methods=["GET"])
+def get_all_pains():
+    entries = db.session.query(PainEntry, User).join(User).order_by(PainEntry.created_at.desc()).all()
+    
+    return jsonify([
+        {
+            "id": e.id,
+            "user_id": u.id,
+            "user_name": u.name or u.email,
+            "score": e.score,
+            "location": e.location,
+            "created_at": e.created_at.isoformat()
+        } for e, u in entries
+    ])
+
+@app.route("/feedback/all", methods=["GET"])
+def get_all_feedbacks():
+    fbs = db.session.query(Feedback, User).join(User).order_by(Feedback.created_at.desc()).all()
+    
+    return jsonify([
+        {
+            "id": f.id,
+            "user_id": u.id,
+            "user_name": u.name or u.email,
+            "text": f.text,
+            "created_at": f.created_at.isoformat()
+        } for f, u in fbs
+    ])
+
 #Endpoints de Conteúdo Estático
 @app.route("/techniques", methods=["GET"])
 def techniques():
